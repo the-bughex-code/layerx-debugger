@@ -6,6 +6,7 @@ import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
 import 'package:layerx_debugger/src/repository/layerx_log_store.dart';
 import 'package:layerx_debugger/src/mvvm/view/lx_log_list_screen.dart';
 import 'package:layerx_debugger/src/config/lx_theme.dart';
+import 'package:layerx_debugger/src/core/layerx_debugger_initializer.dart';
 
 class LxFabTrigger extends StatefulWidget {
   const LxFabTrigger({super.key});
@@ -54,21 +55,42 @@ class _LxFabTriggerState extends State<LxFabTrigger>
   }
 
   void _openLogs(BuildContext context) {
-    Navigator.of(context, rootNavigator: true).push(
-      PageRouteBuilder<void>(
-        pageBuilder: (_, animation, __) => const LxLogListScreen(),
-        transitionsBuilder: (_, animation, __, child) {
-          return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 1),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
-            child: child,
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 380),
-      ),
-    );
+    final nav = LayerXDebugger.findNavigator(context);
+    if (nav != null) {
+      nav.push(
+        PageRouteBuilder<void>(
+          pageBuilder: (_, animation, __) => const LxLogListScreen(),
+          transitionsBuilder: (_, animation, __, child) {
+            return SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+              child: child,
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 380),
+        ),
+      );
+    } else {
+      try {
+        Navigator.of(context, rootNavigator: true).push(
+          PageRouteBuilder<void>(
+            pageBuilder: (_, animation, __) => const LxLogListScreen(),
+            transitionsBuilder: (_, animation, __, child) {
+              return SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 1),
+                  end: Offset.zero,
+                ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 380),
+          ),
+        );
+      } catch (_) {}
+    }
   }
 
   @override
@@ -206,9 +228,11 @@ class _LxFabTriggerState extends State<LxFabTrigger>
   }
 
   void _showQuickMenu(BuildContext context) {
+    final nav = LayerXDebugger.findNavigator(context);
+    final targetContext = nav?.context ?? context;
     showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
+      context: targetContext,
+      useRootNavigator: nav == null,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
         decoration: BoxDecoration(

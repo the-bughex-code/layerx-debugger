@@ -105,10 +105,61 @@ class LayerXDebugger {
   ///   child: const Text('Open logs'),
   /// );
   /// ```
-  static Future<void> openViewer(BuildContext context) {
-    return Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute<void>(builder: (_) => const LxLogListScreen()),
-    );
+  static Future<void> openViewer(BuildContext context) async {
+    final nav = findNavigator(context);
+    if (nav != null) {
+      await nav.push(
+        MaterialPageRoute<void>(builder: (_) => const LxLogListScreen()),
+      );
+    } else {
+      try {
+        await Navigator.of(context, rootNavigator: true).push(
+          MaterialPageRoute<void>(builder: (_) => const LxLogListScreen()),
+        );
+      } catch (e, stack) {
+        LayerXLog.log(
+          level: LayerXLogLevel.error,
+          message: '[LayerX Debugger] Failed to open viewer: Navigator not found.',
+          error: e,
+          stackTrace: stack,
+        );
+      }
+    }
+  }
+
+  /// Robustly searches for a [NavigatorState] in the widget tree.
+  static NavigatorState? findNavigator(BuildContext context) {
+    // 1. Try using the routeObserver navigator first
+    final observerNav = _routeObserver?.navigator;
+    if (observerNav != null) return observerNav;
+
+    // 2. Try standard context search
+    try {
+      final nav = Navigator.maybeOf(context, rootNavigator: true);
+      if (nav != null) return nav;
+    } catch (_) {}
+
+    // 3. Downward traversal from the root element
+    NavigatorState? found;
+    void visitor(Element element) {
+      if (found != null) return;
+      if (element is StatefulElement && element.state is NavigatorState) {
+        found = element.state as NavigatorState;
+        return;
+      }
+      element.visitChildren(visitor);
+    }
+
+    if (context is Element) {
+      Element? root = context;
+      context.visitAncestorElements((ancestor) {
+        root = ancestor;
+        return true;
+      });
+      root?.visitChildren(visitor);
+    }
+
+    return found;
   }
 
   /// Resets all initialization state. Intended for tests only.

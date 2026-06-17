@@ -14,6 +14,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - Redesigned `LxLogListScreen` with dark glass layout, live pulse dot, inline stats bar, custom clear confirmation dialog, and terminal-inspired empty state.
   - Redesigned `LxLogDetailScreen` with dark terminal aesthetics, custom syntax highlighted JSON viewer, dark schema diff tables, and custom level-based accent glow cards.
   - Updated widgets (`LxFabTrigger`, `LxEdgeTrigger`, `LxFilterBar`, `LxLogTile`, `LxSourceChip`, `LxDetailCard`, `LxSolutionCard`, `LxJourneyTimeline`) to align with the premium dark theme and utilize glowing accents.
+  - Fixed navigator context crash by implementing a robust element tree traversal engine (`LayerXDebugger.findNavigator(context)`) to automatically locate the active `NavigatorState` when the context is above the Navigator (e.g. from `MaterialApp.builder` or nested contexts).
 
 ---
 

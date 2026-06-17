@@ -5,15 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:layerx_debugger/src/config/layerx_debug_config.dart';
 import 'package:layerx_debugger/src/config/lx_theme.dart';
 import 'package:layerx_debugger/src/core/layerx_debugger_initializer.dart';
-import 'package:layerx_debugger/src/mvvm/view/lx_log_list_screen.dart';
 
 class LxEdgeTrigger extends StatelessWidget {
   const LxEdgeTrigger({super.key});
 
   void _open(BuildContext context) {
-    Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute<void>(builder: (_) => const LxLogListScreen()),
-    );
+    LayerXDebugger.openViewer(context);
   }
 
   @override
