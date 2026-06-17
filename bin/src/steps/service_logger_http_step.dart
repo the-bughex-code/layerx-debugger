@@ -207,6 +207,13 @@ class ServiceLoggerHttpStep {
       );
     }
 
+    if (!modified && !content.contains('LayerXLogInterceptorOutput')) {
+      CliPrinter.warning(
+        'Found logger_service.dart but could not auto-patch it.\n'
+        '     Please add LayerXLogInterceptorOutput() to your Logger output manually.',
+      );
+    }
+
     return modified;
   }
 
@@ -348,6 +355,13 @@ class ServiceLoggerHttpStep {
       httpFile.writeAsStringSync(content);
       CliPrinter.success(
         'https_calls.dart bound with LayerXNetworkLogger (backup created).',
+      );
+    }
+
+    if (!modified && !content.contains('LayerXNetworkLogger')) {
+      CliPrinter.warning(
+        'Found https_calls.dart but no legacy LxHttpInterceptor calls to replace.\n'
+        '     To log HTTP requests, call LayerXNetworkLogger.record(...) inside your HTTP client methods.',
       );
     }
 
