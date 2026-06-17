@@ -106,7 +106,7 @@ class LayerXDebugger {
   /// );
   /// ```
   static Future<void> openViewer(BuildContext context) {
-    return Navigator.of(context).push(
+    return Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute<void>(builder: (_) => const LxLogListScreen()),
     );
   }

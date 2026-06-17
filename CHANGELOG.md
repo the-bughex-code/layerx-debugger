@@ -5,7 +5,22 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.0.2
+
+### Fixed
+
+- **Navigator context crash** — `LxFabTrigger`, `LxEdgeTrigger` and `LayerXDebugger.openViewer`
+  now use `Navigator.of(context, rootNavigator: true)` (and `showModalBottomSheet` uses
+  `useRootNavigator: true`). Previously, tapping the floating 🐛 button or swiping the
+  edge trigger threw *"Navigator operation requested with a context that does not include a
+  Navigator"* because `LayerXDebugOverlay` is placed inside `MaterialApp`'s `builder:`
+  callback — which sits **above** the `Navigator` in the widget tree. Using the root
+  navigator bypasses this scope and resolves the crash.
+
+---
+
 ## 1.0.1
+
 
 ### Added
 

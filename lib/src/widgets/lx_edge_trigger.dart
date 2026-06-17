@@ -10,7 +10,7 @@ class LxEdgeTrigger extends StatelessWidget {
   const LxEdgeTrigger({super.key});
 
   void _open(BuildContext context) {
-    Navigator.of(context).push(
+    Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute<void>(builder: (_) => const LxLogListScreen()),
     );
   }

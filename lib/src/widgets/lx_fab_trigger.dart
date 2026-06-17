@@ -19,7 +19,7 @@ class _LxFabTriggerState extends State<LxFabTrigger> {
   bool _isDragging = false;
 
   void _openLogs(BuildContext context) {
-    Navigator.of(context).push(
+    Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute<void>(builder: (_) => const LxLogListScreen()),
     );
   }
@@ -125,6 +125,7 @@ class _LxFabTriggerState extends State<LxFabTrigger> {
   void _showLongPressMenu(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
