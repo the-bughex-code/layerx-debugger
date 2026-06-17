@@ -81,6 +81,7 @@ class CliPrinter {
     required bool pubspecDone,
     required bool mainDone,
     required String? appWidgetFile,
+    bool servicesBound = false,
   }) {
     print('');
     divider();
@@ -90,6 +91,9 @@ class CliPrinter {
     if (mainDone) success('main.dart wrapped with LayerXDebugger');
     if (appWidgetFile != null) {
       success('LayerXDebugOverlay injected in $appWidgetFile');
+    }
+    if (servicesBound) {
+      success('LoggerService & HttpsCalls bound to LayerX Debugger');
     }
     print('');
     print('$_bold  Next steps:$_reset');

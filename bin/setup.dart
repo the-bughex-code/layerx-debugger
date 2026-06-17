@@ -8,6 +8,7 @@
 ///   1. Adds layerx_debugger + layerx_generator to pubspec and runs flutter pub get
 ///   2. Wraps lib/main.dart with LayerXDebugger.runZonedGuarded + initialize
 ///   3. Injects LayerXDebugOverlay builder into MaterialApp / GetMaterialApp
+///   4. Binds LoggerService and HttpsCalls with LayerX Debugger automatically
 library;
 
 import 'dart:io';
@@ -16,6 +17,7 @@ import 'src/steps/app_widget_step.dart';
 import 'src/steps/layerx_detector_step.dart';
 import 'src/steps/main_dart_step.dart';
 import 'src/steps/pubspec_step.dart';
+import 'src/steps/service_logger_http_step.dart';
 import 'src/utils/cli_printer.dart';
 
 Future<void> main(List<String> args) async {
@@ -76,10 +78,15 @@ Future<void> main(List<String> args) async {
   final appWidgetFile = AppWidgetStep(projectRoot).run();
   CliPrinter.divider();
 
+  // ── Step 4: Bind Logger & Http services ────────────────────────────────────
+  final servicesBound = ServiceLoggerHttpStep(projectRoot).run();
+  CliPrinter.divider();
+
   // ── Summary ────────────────────────────────────────────────────────────────
   CliPrinter.summary(
     pubspecDone: pubspecDone,
     mainDone: mainDone,
     appWidgetFile: appWidgetFile,
+    servicesBound: servicesBound,
   );
 }
