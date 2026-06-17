@@ -5,7 +5,22 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.0.1
+
+### Added
+
+- **`dart run layerx_debugger:setup` CLI** — one command auto-configures LayerX Debugger in any
+  Flutter project: injects the dependency into `pubspec.yaml`, runs `flutter pub get`, wraps
+  `main()` with `LayerXDebugger.runZonedGuarded` + `initialize()`, and injects
+  `LayerXDebugOverlay` builder + `navigatorObservers` into `MaterialApp` /
+  `GetMaterialApp`. Original files are backed up as `.bak`. Fully idempotent — safe to
+  re-run multiple times. An optional project path argument is also supported:
+  `dart run layerx_debugger:setup /path/to/project`.
+
+---
+
 ## 1.0.0
+
 
 🎉 **First release — in-app debugging for Flutter.**
 
