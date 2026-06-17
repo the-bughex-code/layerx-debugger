@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:layerx_debugger/src/config/layerx_debug_config.dart';
+import 'package:layerx_debugger/src/config/lx_theme.dart';
 import 'package:layerx_debugger/src/core/layerx_debugger_initializer.dart';
 import 'package:layerx_debugger/src/mvvm/view/lx_log_list_screen.dart';
 
@@ -55,9 +56,12 @@ class LxEdgeTrigger extends StatelessWidget {
                 ? Alignment.centerLeft
                 : (isRight ? Alignment.centerRight : Alignment.bottomCenter),
             child: Container(
-              width: isBottom ? double.infinity : 2.0,
-              height: isBottom ? 2.0 : double.infinity,
-              color: Colors.blueGrey.withValues(alpha: 0.3),
+              width: isBottom ? double.infinity : 1.5,
+              height: isBottom ? 1.5 : double.infinity,
+              decoration: BoxDecoration(
+                color: LxTheme.accentBlue.withValues(alpha: 0.3),
+                boxShadow: LxTheme.glowShadow(LxTheme.accentBlue, spread: 2),
+              ),
             ),
           ),
         ),

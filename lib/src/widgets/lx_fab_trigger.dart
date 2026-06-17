@@ -1,10 +1,11 @@
 // Internal viewer widget — not part of the public API.
 // ignore_for_file: public_member_api_docs
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
-
 import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
 import 'package:layerx_debugger/src/repository/layerx_log_store.dart';
 import 'package:layerx_debugger/src/mvvm/view/lx_log_list_screen.dart';
+import 'package:layerx_debugger/src/config/lx_theme.dart';
 
 class LxFabTrigger extends StatefulWidget {
   const LxFabTrigger({super.key});
@@ -13,40 +14,85 @@ class LxFabTrigger extends StatefulWidget {
   State<LxFabTrigger> createState() => _LxFabTriggerState();
 }
 
-class _LxFabTriggerState extends State<LxFabTrigger> {
+class _LxFabTriggerState extends State<LxFabTrigger>
+    with TickerProviderStateMixin {
   Offset _offset = const Offset(-1, -1);
-  bool _isHovered = false;
   bool _isDragging = false;
+
+  late final AnimationController _pulseCtrl;
+  late final Animation<double> _pulseAnim;
+  late final AnimationController _mountCtrl;
+  late final Animation<double> _mountAnim;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Glow pulse ring
+    _pulseCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat(reverse: true);
+    _pulseAnim = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
+    );
+
+    // Slide-in on mount
+    _mountCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _mountAnim = CurvedAnimation(parent: _mountCtrl, curve: Curves.elasticOut);
+    _mountCtrl.forward();
+  }
+
+  @override
+  void dispose() {
+    _pulseCtrl.dispose();
+    _mountCtrl.dispose();
+    super.dispose();
+  }
 
   void _openLogs(BuildContext context) {
     Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute<void>(builder: (_) => const LxLogListScreen()),
+      PageRouteBuilder<void>(
+        pageBuilder: (_, animation, __) => const LxLogListScreen(),
+        transitionsBuilder: (_, animation, __, child) {
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 1),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 380),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-
     if (_offset.dx == -1 && _offset.dy == -1) {
-      _offset = Offset(screenSize.width - 70, screenSize.height - 140);
+      _offset = Offset(screenSize.width - 72, screenSize.height - 148);
     }
 
     return Positioned(
       left: _offset.dx,
       top: _offset.dy,
-      child: ValueListenableBuilder<List<LayerXLogEntry>>(
-        valueListenable: LayerXLogStore.logsNotifier,
-        builder: (context, logs, _) {
-          final errorCount = LayerXLogStore.errorCount;
-          final totalCount = logs.length;
-          final hasErrors = errorCount > 0;
-          final badgeCount = hasErrors ? errorCount : totalCount;
+      child: ScaleTransition(
+        scale: _mountAnim,
+        child: ValueListenableBuilder<List<LayerXLogEntry>>(
+          valueListenable: LayerXLogStore.logsNotifier,
+          builder: (context, logs, _) {
+            final errorCount = LayerXLogStore.errorCount;
+            final totalCount = logs.length;
+            final hasErrors = errorCount > 0;
+            final badgeCount = hasErrors ? errorCount : totalCount;
+            final accentColor = hasErrors ? LxTheme.accentRed : LxTheme.accentBlue;
 
-          return MouseRegion(
-            onEnter: (_) => setState(() => _isHovered = true),
-            onExit: (_) => setState(() => _isHovered = false),
-            child: GestureDetector(
+            return GestureDetector(
               onPanStart: (_) => setState(() => _isDragging = true),
               onPanUpdate: (details) {
                 setState(() {
@@ -59,118 +105,198 @@ class _LxFabTriggerState extends State<LxFabTrigger> {
               },
               onPanEnd: (_) => setState(() => _isDragging = false),
               onTap: () => _openLogs(context),
-              onLongPress: () => _showLongPressMenu(context),
-              child: Opacity(
-                opacity: (_isHovered || _isDragging) ? 1.0 : 0.6,
-                child: Stack(
-                  alignment: Alignment.center,
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: hasErrors
-                            ? Colors.red.shade900
-                            : Colors.blueGrey.shade800,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(Icons.bug_report,
-                          color: Colors.white, size: 26),
-                    ),
-                    if (badgeCount > 0)
-                      Positioned(
-                        right: -4,
-                        top: -4,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
+              onLongPress: () => _showQuickMenu(context),
+              child: AnimatedBuilder(
+                animation: _pulseAnim,
+                builder: (context, child) {
+                  return Stack(
+                    alignment: Alignment.center,
+                    clipBehavior: Clip.none,
+                    children: [
+                      // ── Outer pulse ring ────────────────────────────────
+                      if (!_isDragging)
+                        Container(
+                          width: 56 + (_pulseAnim.value * 10),
+                          height: 56 + (_pulseAnim.value * 10),
                           decoration: BoxDecoration(
-                            color: hasErrors ? Colors.red : Colors.blue,
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 1.5),
+                            border: Border.all(
+                              color: accentColor.withValues(
+                                  alpha: (1.0 - _pulseAnim.value) * 0.5),
+                              width: 1.5,
+                            ),
                           ),
-                          constraints: const BoxConstraints(
-                            minWidth: 20,
-                            minHeight: 20,
+                        ),
+
+                      // ── Main FAB body ───────────────────────────────────
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: LxTheme.surface,
+                          border: Border.all(
+                            color: accentColor.withValues(alpha: 0.7),
+                            width: 1.5,
                           ),
-                          child: Center(
-                            child: Text(
-                              badgeCount > 99 ? '99+' : badgeCount.toString(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
+                          boxShadow: [
+                            BoxShadow(
+                              color: accentColor.withValues(alpha: 0.35),
+                              blurRadius: 16,
+                              spreadRadius: 0,
+                            ),
+                            BoxShadow(
+                              color: accentColor.withValues(alpha: 0.12),
+                              blurRadius: 32,
+                              spreadRadius: 0,
+                            ),
+                            const BoxShadow(
+                              color: Color(0x80000000),
+                              blurRadius: 8,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Transform.rotate(
+                          angle: hasErrors ? math.pi / 12 : 0,
+                          child: Icon(
+                            hasErrors ? Icons.bug_report : Icons.pest_control_outlined,
+                            color: accentColor,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+
+                      // ── Count badge ─────────────────────────────────────
+                      if (badgeCount > 0)
+                        Positioned(
+                          right: -2,
+                          top: -2,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: accentColor,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: LxTheme.bg, width: 1.5),
+                              boxShadow: LxTheme.glowShadow(accentColor, spread: 3),
+                            ),
+                            constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                            child: Center(
+                              child: Text(
+                                badgeCount > 99 ? '99+' : '$badgeCount',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w800,
+                                  fontFamily: 'monospace',
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                  ],
-                ),
+                    ],
+                  );
+                },
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
 
-  void _showLongPressMenu(BuildContext context) {
+  void _showQuickMenu(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
       useRootNavigator: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) {
-        return SafeArea(
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: LxTheme.surfaceAlt,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          border: const Border(top: BorderSide(color: LxTheme.border)),
+        ),
+        child: SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ListTile(
-                leading: const Icon(Icons.bug_report, color: Colors.blueGrey),
-                title: const Text('View Logs'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _openLogs(context);
-                },
+              // Handle
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                width: 36,
+                height: 3,
+                decoration: BoxDecoration(
+                  color: LxTheme.borderActive,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-              ListTile(
-                leading: const Icon(Icons.copy, color: Colors.green),
-                title: const Text('Export & Copy all'),
+              _menuTile(
+                ctx,
+                icon: Icons.terminal_outlined,
+                color: LxTheme.accentBlue,
+                label: 'View Logs',
+                onTap: () { Navigator.pop(ctx); _openLogs(context); },
+              ),
+              _menuTile(
+                ctx,
+                icon: Icons.copy_outlined,
+                color: LxTheme.accentGreen,
+                label: 'Export & Copy All',
                 onTap: () async {
                   final messenger = ScaffoldMessenger.of(context);
                   Navigator.pop(ctx);
                   await LayerXLogStore.copyExportToClipboard();
                   messenger.showSnackBar(
-                    const SnackBar(
-                        content: Text('All logs copied to clipboard! 📋')),
+                    LxTheme.snackBar('All logs copied to clipboard ✓'),
                   );
                 },
               ),
-              ListTile(
-                leading: const Icon(Icons.delete_sweep, color: Colors.red),
-                title: const Text('Clear All'),
+              _menuTile(
+                ctx,
+                icon: Icons.delete_sweep_outlined,
+                color: LxTheme.accentRed,
+                label: 'Clear All Logs',
                 onTap: () {
                   final messenger = ScaffoldMessenger.of(context);
                   Navigator.pop(ctx);
                   LayerXLogStore.clear();
-                  messenger.showSnackBar(
-                    const SnackBar(content: Text('Logs cleared!')),
-                  );
+                  messenger.showSnackBar(LxTheme.snackBar('Logs cleared'));
                 },
               ),
+              const SizedBox(height: 8),
             ],
           ),
-        );
-      },
+        ),
+      ),
+    );
+  }
+
+  Widget _menuTile(
+    BuildContext ctx, {
+    required IconData icon,
+    required Color color,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color, size: 18),
+            ),
+            const SizedBox(width: 14),
+            Text(label, style: LxTheme.bodyPrimary.copyWith(fontWeight: FontWeight.w600)),
+          ],
+        ),
+      ),
     );
   }
 }

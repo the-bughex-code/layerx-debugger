@@ -1,46 +1,49 @@
-// Internal viewer widget — not part of the public API.
 // ignore_for_file: public_member_api_docs
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
 import 'package:layerx_debugger/src/mvvm/model/layerx_journey_step.dart';
+import 'package:layerx_debugger/src/config/lx_theme.dart';
 
+/// Premium dark journey timeline card.
 class LxJourneyTimeline extends StatelessWidget {
   final List<LayerXJourneyStep> journey;
-
   const LxJourneyTimeline({super.key, required this.journey});
 
   @override
   Widget build(BuildContext context) {
-    if (journey.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(16),
-        child: Text('No journey data available.'),
-      );
-    }
+    if (journey.isEmpty) return const SizedBox.shrink();
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.withValues(alpha: 0.15)),
-      ),
-      color: Colors.white,
+      decoration: LxTheme.card(glowColor: LxTheme.accentPurple),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Journey Timeline',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
+            // ── Section header ───────────────────────────────────────────────
+            Row(
+              children: [
+                Container(
+                  width: 3,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: LxTheme.accentPurple,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text('EXECUTION JOURNEY', style: LxTheme.sectionLabel),
+                const Spacer(),
+                Text(
+                  '${journey.length} steps',
+                  style: LxTheme.monoSm,
+                ),
+              ],
             ),
             const SizedBox(height: 16),
+
+            // ── Steps ────────────────────────────────────────────────────────
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -49,104 +52,90 @@ class LxJourneyTimeline extends StatelessWidget {
                 final step = journey[index];
                 final isLast = index == journey.length - 1;
                 final isError = step.type == 'error';
+                final color = _stepColor(step.type);
 
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Column(
-                      children: [
-                        Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: isError
-                                ? Colors.red.shade100
-                                : _stepColor(step.type).withValues(alpha: 0.15),
-                            border: Border.all(
-                              color:
-                                  isError ? Colors.red : _stepColor(step.type),
-                              width: 2,
-                            ),
-                          ),
-                          child: Center(
-                            child: Icon(
-                              _stepIcon(step.type),
-                              size: 12,
-                              color:
-                                  isError ? Colors.red : _stepColor(step.type),
-                            ),
-                          ),
-                        ),
-                        if (!isLast)
+                return IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ── Timeline spine ─────────────────────────────────────
+                      Column(
+                        children: [
                           Container(
-                            width: 2,
-                            height: 36,
-                            color: isError
-                                ? Colors.red.shade200
-                                : Colors.grey.shade300,
+                            width: 22,
+                            height: 22,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: color.withValues(alpha: 0.12),
+                              border: Border.all(color: color.withValues(alpha: 0.6), width: 1.5),
+                              boxShadow: LxTheme.glowShadow(color, spread: 3),
+                            ),
+                            child: Center(
+                              child: Icon(_stepIcon(step.type), size: 11, color: color),
+                            ),
                           ),
-                      ],
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        margin: const EdgeInsets.only(bottom: 12),
-                        decoration: BoxDecoration(
-                          color: isError
-                              ? const Color(0xFFFFF0F0)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(8),
-                          border: isError
-                              ? Border.all(color: Colors.red.shade200)
-                              : null,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    step.title,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                      color: isError
-                                          ? Colors.red.shade900
-                                          : Colors.black87,
+                          if (!isLast)
+                            Expanded(
+                              child: Container(
+                                width: 1,
+                                margin: const EdgeInsets.symmetric(vertical: 2),
+                                color: isError
+                                    ? LxTheme.accentRed.withValues(alpha: 0.4)
+                                    : LxTheme.border,
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(width: 12),
+
+                      // ── Step content ────────────────────────────────────────
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          margin: const EdgeInsets.only(bottom: 10),
+                          decoration: BoxDecoration(
+                            color: isError
+                                ? LxTheme.accentRed.withValues(alpha: 0.05)
+                                : LxTheme.surfaceAlt,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isError
+                                  ? LxTheme.accentRed.withValues(alpha: 0.3)
+                                  : LxTheme.border,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      step.title,
+                                      style: LxTheme.labelBold.copyWith(
+                                        color: isError ? LxTheme.accentRed : color,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                Text(
-                                  DateFormat('HH:mm:ss.SSS')
-                                      .format(step.timestamp),
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey.shade500,
+                                  Text(
+                                    DateFormat('HH:mm:ss.SSS').format(step.timestamp),
+                                    style: LxTheme.monoSm,
                                   ),
+                                ],
+                              ),
+                              if (step.description != null) ...[
+                                const SizedBox(height: 5),
+                                Text(
+                                  step.description!,
+                                  style: LxTheme.bodySecondary,
                                 ),
                               ],
-                            ),
-                            if (step.description != null) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                step.description!,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: isError
-                                      ? Colors.red.shade800
-                                      : Colors.black54,
-                                ),
-                              ),
                             ],
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 );
               },
             ),
@@ -158,39 +147,25 @@ class LxJourneyTimeline extends StatelessWidget {
 
   Color _stepColor(String? type) {
     switch (type) {
-      case 'ui':
-        return Colors.purple;
-      case 'controller':
-        return Colors.blue;
-      case 'service':
-        return Colors.green;
-      case 'repository':
-        return Colors.teal;
-      case 'network':
-        return Colors.cyan;
-      case 'error':
-        return Colors.red;
-      default:
-        return Colors.grey;
+      case 'ui': return LxTheme.accentPurple;
+      case 'controller': return LxTheme.accentBlue;
+      case 'service': return LxTheme.accentGreen;
+      case 'repository': return const Color(0xFF2DD4BF);
+      case 'network': return LxTheme.accentCyan;
+      case 'error': return LxTheme.accentRed;
+      default: return LxTheme.textSecondary;
     }
   }
 
   IconData _stepIcon(String? type) {
     switch (type) {
-      case 'ui':
-        return Icons.phone_android;
-      case 'controller':
-        return Icons.gamepad_outlined;
-      case 'service':
-        return Icons.miscellaneous_services_outlined;
-      case 'repository':
-        return Icons.storage_outlined;
-      case 'network':
-        return Icons.cloud_outlined;
-      case 'error':
-        return Icons.error_outline;
-      default:
-        return Icons.info_outline;
+      case 'ui': return Icons.phone_android;
+      case 'controller': return Icons.gamepad_outlined;
+      case 'service': return Icons.miscellaneous_services_outlined;
+      case 'repository': return Icons.storage_outlined;
+      case 'network': return Icons.cloud_outlined;
+      case 'error': return Icons.error_outline;
+      default: return Icons.circle;
     }
   }
 }

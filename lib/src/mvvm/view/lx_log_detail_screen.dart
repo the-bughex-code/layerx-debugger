@@ -15,6 +15,7 @@ import 'package:layerx_debugger/src/widgets/parts/lx_detail_card.dart';
 import 'package:layerx_debugger/src/widgets/parts/lx_journey_timeline.dart';
 import 'package:layerx_debugger/src/widgets/parts/lx_solution_card.dart';
 import 'package:layerx_debugger/src/widgets/parts/lx_source_chip.dart';
+import 'package:layerx_debugger/src/config/lx_theme.dart';
 
 class LxLogDetailScreen extends StatefulWidget {
   final LayerXLogEntry log;
@@ -40,27 +41,33 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
     final totalOccurrences = log.occurrenceCount;
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: LxTheme.bg,
       appBar: AppBar(
-        title: const Text('Log Detail'),
-        elevation: 0,
-        backgroundColor: Colors.white,
-        iconTheme: const IconThemeData(color: Colors.black87),
-        titleTextStyle: const TextStyle(
-          color: Colors.black87,
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
+        title: Text(
+          'LOG DETAIL',
+          style: LxTheme.sectionLabel.copyWith(
+            fontSize: 13,
+            color: LxTheme.textPrimary,
+            letterSpacing: 2,
+          ),
         ),
+        elevation: 0,
+        backgroundColor: LxTheme.surface,
+        iconTheme: const IconThemeData(color: LxTheme.textSecondary),
         actions: [
           IconButton(
-            icon: const Icon(Icons.copy_all_outlined, color: Colors.black54),
+            icon: const Icon(Icons.copy_all_outlined, size: 20),
             tooltip: 'Copy full log',
             onPressed: () => _copyFullLog(context, log),
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: LxTheme.border),
+        ),
       ),
       body: ListView(
-        padding: const EdgeInsets.only(bottom: 32),
+        padding: const EdgeInsets.only(bottom: 32, top: 8),
         children: [
           _buildHeader(log, totalOccurrences),
           _buildBlameCard(log),
@@ -71,6 +78,7 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
               log.methodName != null)
             LxDetailCard(
               title: 'Where It Happened',
+              accentColor: LxTheme.accentBlue,
               child: Column(
                 children: [
                   _row(context, '📱', 'Screen', log.screenName),
@@ -93,6 +101,7 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
               log.endpoint != null)
             LxDetailCard(
               title: 'API Details',
+              accentColor: LxTheme.accentCyan,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -106,6 +115,7 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
                   if (log.requestPayload != null) ...[
                     const SizedBox(height: 12),
                     _sectionDivider('Request Payload'),
+                    const SizedBox(height: 6),
                     _jsonWidget(log.requestPayload!, _showFullRequest,
                         onToggle: () {
                       setState(() => _showFullRequest = !_showFullRequest);
@@ -116,28 +126,31 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
                     _buildResponseChangedBanner(log),
                   ],
                   if (log.responseChanged && log.schemaChanges.isNotEmpty) ...[
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
                     _buildSchemaDiffTable(log),
                   ],
                   if (log.responseChanged &&
                       log.previousResponsePayload != null) ...[
                     const SizedBox(height: 12),
                     _sectionDivider('Previous Response (Before Change)'),
+                    const SizedBox(height: 6),
                     _jsonWidget(
                         log.previousResponsePayload!, _showFullPrevResponse,
-                        tint: const Color(0xFFFFF3E0), onToggle: () {
+                        onToggle: () {
                       setState(
                           () => _showFullPrevResponse = !_showFullPrevResponse);
                     }),
                     const SizedBox(height: 12),
                     _sectionDivider('Current Response (After Change)'),
+                    const SizedBox(height: 6),
                     _jsonWidget(log.responsePayload!, _showFullResponse,
-                        tint: const Color(0xFFF1F8E9), onToggle: () {
+                        onToggle: () {
                       setState(() => _showFullResponse = !_showFullResponse);
                     }),
                   ] else if (log.responsePayload != null) ...[
                     const SizedBox(height: 12),
                     _sectionDivider('Response Payload'),
+                    const SizedBox(height: 6),
                     _jsonWidget(log.responsePayload!, _showFullResponse,
                         onToggle: () {
                       setState(() => _showFullResponse = !_showFullResponse);
@@ -156,6 +169,7 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
           if (totalOccurrences > 1)
             LxDetailCard(
               title: 'Occurrences (×$totalOccurrences)',
+              accentColor: LxTheme.accentAmber,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: List.generate(log.repeatTimestamps.length, (idx) {
@@ -168,25 +182,18 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Row(
                       children: [
-                        const Icon(Icons.repeat, size: 14, color: Colors.amber),
+                        const Icon(Icons.repeat, size: 14, color: LxTheme.accentAmber),
                         const SizedBox(width: 8),
                         Text(
                           formatted,
-                          style: const TextStyle(
-                            fontFamily: 'monospace',
-                            fontSize: 12,
-                            color: Colors.black87,
-                          ),
+                          style: LxTheme.mono.copyWith(fontSize: 12),
                         ),
                         const Spacer(),
                         Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: idx == 0
-                                ? Colors.grey.shade300
-                                : Colors.amber.shade100,
-                            borderRadius: BorderRadius.circular(6),
+                          decoration: LxTheme.pill(
+                            idx == 0 ? LxTheme.textSecondary : LxTheme.accentAmber,
                           ),
                           child: Text(
                             label,
@@ -194,8 +201,8 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
                               fontSize: 9,
                               fontWeight: FontWeight.bold,
                               color: idx == 0
-                                  ? Colors.grey.shade700
-                                  : Colors.amber.shade900,
+                                  ? LxTheme.textSecondary
+                                  : LxTheme.accentAmber,
                             ),
                           ),
                         ),
@@ -252,15 +259,10 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
   }
 
   Widget _buildHeader(LayerXLogEntry log, int totalOccurrences) {
-    return Card(
+    final severityColor = log.level.color;
+    return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-            color: log.level.color.withValues(alpha: 0.3), width: 1.5),
-      ),
-      color: log.level.backgroundColor ?? Colors.white,
+      decoration: LxTheme.card(glowColor: severityColor),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -279,19 +281,18 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
                         log.statusCode != null
                             ? '${log.statusCode} ${log.message.split('\n').first}'
                             : log.message.split('\n').first,
-                        style: TextStyle(
-                          fontSize: 16,
+                        style: LxTheme.mono.copyWith(
+                          fontSize: 15,
                           fontWeight: FontWeight.bold,
-                          color: log.level.color,
+                          color: severityColor,
                         ),
                       ),
                       if (log.message.contains('\n')) ...[
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 8),
                         Text(
                           log.message.substring(log.message.indexOf('\n') + 1),
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.black54,
+                          style: LxTheme.bodySecondary.copyWith(
+                            color: LxTheme.textSecondary,
                           ),
                         ),
                       ],
@@ -301,6 +302,8 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
               ],
             ),
             const SizedBox(height: 16),
+            LxTheme.divider,
+            const SizedBox(height: 12),
             Row(
               children: [
                 LxSourceChip(source: log.source),
@@ -308,14 +311,11 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: log.level.color,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                  decoration: LxTheme.pill(severityColor),
                   child: Text(
                     log.level.label,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: severityColor,
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                     ),
@@ -326,21 +326,17 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.shade700,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Row(
+                    decoration: LxTheme.pill(LxTheme.accentOrange),
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.swap_horiz, size: 10, color: Colors.white),
-                        SizedBox(width: 4),
+                        const Icon(Icons.swap_horiz, size: 10, color: LxTheme.accentOrange),
+                        const SizedBox(width: 4),
                         Text(
                           'API CHANGED',
-                          style: TextStyle(
-                            color: Colors.white,
+                          style: LxTheme.sectionLabel.copyWith(
+                            color: LxTheme.accentOrange,
                             fontSize: 9,
-                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
@@ -352,16 +348,12 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.shade700,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    decoration: LxTheme.pill(LxTheme.accentAmber),
                     child: Text(
                       '×$totalOccurrences occurrences',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+                      style: LxTheme.sectionLabel.copyWith(
+                        color: LxTheme.accentAmber,
+                        fontSize: 9,
                       ),
                     ),
                   ),
@@ -377,14 +369,15 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
     final blameInfo = LayerXBlameEngine.analyze(log);
     if (blameInfo == null) return const SizedBox.shrink();
 
-    return Card(
+    final c = blameInfo.color;
+
+    return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      elevation: 0,
-      color: blameInfo.color.withValues(alpha: 0.08),
-      shape: RoundedRectangleBorder(
+      decoration: BoxDecoration(
+        color: LxTheme.surface,
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-            color: blameInfo.color.withValues(alpha: 0.3), width: 1.5),
+        border: Border.all(color: c.withValues(alpha: 0.35)),
+        boxShadow: LxTheme.glowShadow(c, spread: 4),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -394,61 +387,56 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(blameInfo.icon, color: blameInfo.color, size: 20),
+                Icon(blameInfo.icon, color: c, size: 20),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'WHO OWNS THIS BUG?',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: blameInfo.color,
-                      letterSpacing: 0.8,
+                    style: LxTheme.sectionLabel.copyWith(
+                      color: c,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 10),
             Text(
               blameInfo.responsibleParty,
-              style: TextStyle(
-                fontSize: 15,
+              style: LxTheme.mono.copyWith(
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: blameInfo.color,
+                color: c,
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: blameInfo.color.withValues(alpha: 0.06),
+                color: LxTheme.surfaceAlt,
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: LxTheme.border),
               ),
               child: Text(
                 blameInfo.explanation,
-                style: TextStyle(
-                  fontSize: 12.5,
-                  color: Colors.black.withValues(alpha: 0.75),
+                style: LxTheme.bodySecondary.copyWith(
                   height: 1.5,
                 ),
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(Icons.assignment_outlined,
-                    size: 14, color: blameInfo.color),
+                    size: 14, color: c),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     blameInfo.qaNote,
-                    style: TextStyle(
-                      fontSize: 11.5,
+                    style: LxTheme.bodySecondary.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: blameInfo.color,
+                      color: c,
                       height: 1.45,
                     ),
                   ),
@@ -477,61 +465,55 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF3E0),
+        color: LxTheme.surfaceAlt,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.orange.shade400, width: 1.5),
+        border: Border.all(color: LxTheme.accentOrange.withValues(alpha: 0.45), width: 1.5),
+        boxShadow: LxTheme.glowShadow(LxTheme.accentOrange, spread: 3),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.warning_amber_rounded,
-                  color: Colors.orange.shade800, size: 20),
+              const Icon(Icons.warning_amber_rounded,
+                  color: LxTheme.accentOrange, size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   '⚡ API RESPONSE CHANGED',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.orange.shade900,
+                  style: LxTheme.sectionLabel.copyWith(
+                    color: LxTheme.accentOrange,
+                    fontSize: 12,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
             'The response payload for "${log.endpoint ?? 'this endpoint'}" '
             'has changed since the previous call.',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.orange.shade900,
+            style: LxTheme.bodySecondary.copyWith(
               height: 1.4,
             ),
           ),
           if (changeCount > 0) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Wrap(
               spacing: 6,
               runSpacing: 4,
               children: [
                 if (addedCount > 0)
-                  _diffBadge('+$addedCount added', const Color(0xFF2E7D32),
-                      const Color(0xFFE8F5E9)),
+                  _diffBadge('+$addedCount added', LxTheme.accentGreen),
                 if (removedCount > 0)
-                  _diffBadge('-$removedCount removed', const Color(0xFFC62828),
-                      const Color(0xFFFFEBEE)),
+                  _diffBadge('-$removedCount removed', LxTheme.accentRed),
                 if (typeChangedCount > 0)
-                  _diffBadge('$typeChangedCount type changed',
-                      const Color(0xFF6A1B9A), const Color(0xFFF3E5F5)),
+                  _diffBadge('$typeChangedCount type changed', LxTheme.accentPurple),
                 if (changeCount - addedCount - removedCount - typeChangedCount >
                     0)
                   _diffBadge(
                     '${changeCount - addedCount - removedCount - typeChangedCount} values changed',
-                    const Color(0xFFE65100),
-                    const Color(0xFFFFF8E1),
+                    LxTheme.accentOrange,
                   ),
               ],
             ),
@@ -543,16 +525,10 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
 
   Widget _buildSchemaDiffTable(LayerXLogEntry log) {
     const diffColors = {
-      LayerXSchemaDiffType.added: Color(0xFF2E7D32),
-      LayerXSchemaDiffType.removed: Color(0xFFC62828),
-      LayerXSchemaDiffType.typeChanged: Color(0xFF6A1B9A),
-      LayerXSchemaDiffType.valueChanged: Color(0xFFE65100),
-    };
-    const diffBgColors = {
-      LayerXSchemaDiffType.added: Color(0xFFE8F5E9),
-      LayerXSchemaDiffType.removed: Color(0xFFFFEBEE),
-      LayerXSchemaDiffType.typeChanged: Color(0xFFF3E5F5),
-      LayerXSchemaDiffType.valueChanged: Color(0xFFFFF8E1),
+      LayerXSchemaDiffType.added: LxTheme.accentGreen,
+      LayerXSchemaDiffType.removed: LxTheme.accentRed,
+      LayerXSchemaDiffType.typeChanged: LxTheme.accentPurple,
+      LayerXSchemaDiffType.valueChanged: LxTheme.accentOrange,
     };
     const diffIcons = {
       LayerXSchemaDiffType.added: '+',
@@ -566,36 +542,40 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade200,
-            borderRadius: const BorderRadius.only(
+          decoration: const BoxDecoration(
+            color: LxTheme.surfaceAlt,
+            borderRadius: BorderRadius.only(
               topLeft: Radius.circular(8),
               topRight: Radius.circular(8),
+            ),
+            border: Border(
+              top: BorderSide(color: LxTheme.border),
+              left: BorderSide(color: LxTheme.border),
+              right: BorderSide(color: LxTheme.border),
             ),
           ),
           child: Row(
             children: [
               const Icon(Icons.compare_arrows_outlined,
-                  size: 14, color: Colors.black54),
+                  size: 14, color: LxTheme.textSecondary),
               const SizedBox(width: 6),
-              Text(
-                'SCHEMA DIFF — ${log.schemaChanges.length} field${log.schemaChanges.length > 1 ? 's' : ''} changed',
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black54,
-                  letterSpacing: 0.5,
+              Expanded(
+                child: Text(
+                  "SCHEMA DIFF — ${log.schemaChanges.length} field${log.schemaChanges.length > 1 ? 's' : ''} changed",
+                  style: LxTheme.sectionLabel.copyWith(
+                    fontSize: 10,
+                    color: LxTheme.textSecondary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const Spacer(),
               GestureDetector(
                 onTap: () => setState(() => _showSchemaDiff = !_showSchemaDiff),
                 child: Text(
                   _showSchemaDiff ? 'Hide' : 'Show',
-                  style: const TextStyle(
+                  style: LxTheme.labelBold.copyWith(
                     fontSize: 11,
-                    color: Colors.blueGrey,
-                    fontWeight: FontWeight.bold,
+                    color: LxTheme.accentBlue,
                   ),
                 ),
               ),
@@ -605,7 +585,7 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
         if (_showSchemaDiff)
           Container(
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(color: LxTheme.border),
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(8),
                 bottomRight: Radius.circular(8),
@@ -616,17 +596,16 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
                 final idx = entry.key;
                 final change = entry.value;
                 final color = diffColors[change.diffType]!;
-                final bgColor = diffBgColors[change.diffType]!;
                 final icon = diffIcons[change.diffType]!;
                 final isLast = idx == log.schemaChanges.length - 1;
 
                 return Container(
                   decoration: BoxDecoration(
-                    color: bgColor,
+                    color: LxTheme.surface,
                     border: isLast
                         ? null
-                        : Border(
-                            bottom: BorderSide(color: Colors.grey.shade200),
+                        : const Border(
+                            bottom: BorderSide(color: LxTheme.border),
                           ),
                   ),
                   padding:
@@ -639,13 +618,14 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
                         height: 20,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: color,
+                          color: color.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: color.withValues(alpha: 0.4)),
                         ),
                         child: Text(
                           icon,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: color,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
@@ -654,15 +634,14 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               children: [
                                 Expanded(
                                   child: Text(
                                     change.key,
-                                    style: TextStyle(
-                                      fontFamily: 'monospace',
+                                    style: LxTheme.mono.copyWith(
                                       fontSize: 11.5,
                                       fontWeight: FontWeight.bold,
                                       color: color,
@@ -672,10 +651,7 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: color.withValues(alpha: 0.12),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
+                                  decoration: LxTheme.pill(color),
                                   child: Text(
                                     change.label,
                                     style: TextStyle(
@@ -690,15 +666,14 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
                             if (change.previousValue != null) ...[
                               const SizedBox(height: 4),
                               _valueRow('Before', change.previousValue!,
-                                  Colors.red.shade800, const Color(0xFFFFCDD2)),
+                                  LxTheme.accentRed),
                             ],
                             if (change.currentValue != null) ...[
                               const SizedBox(height: 3),
                               _valueRow(
                                   'After',
                                   change.currentValue!,
-                                  Colors.green.shade800,
-                                  const Color(0xFFC8E6C9)),
+                                  LxTheme.accentGreen),
                             ],
                           ],
                         ),
@@ -713,13 +688,13 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
     );
   }
 
-  Widget _valueRow(String label, String value, Color textColor, Color bgColor) {
+  Widget _valueRow(String label, String value, Color textColor) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           '$label:',
-          style: TextStyle(
+          style: LxTheme.monoSm.copyWith(
             fontSize: 10,
             fontWeight: FontWeight.bold,
             color: textColor,
@@ -730,13 +705,13 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: bgColor,
+              color: textColor.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: textColor.withValues(alpha: 0.2)),
             ),
             child: Text(
               value,
-              style: TextStyle(
-                fontFamily: 'monospace',
+              style: LxTheme.mono.copyWith(
                 fontSize: 10,
                 color: textColor,
               ),
@@ -748,55 +723,56 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
   }
 
   Widget _buildStackTraceCard(LayerXLogEntry log) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.withValues(alpha: 0.15)),
-      ),
-      color: Colors.white,
-      child: ExpansionTile(
-        initiallyExpanded: _showStackTrace,
-        title: const Text(
-          'Stack Trace',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
+      decoration: LxTheme.card(),
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          dividerColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+        ),
+        child: ExpansionTile(
+          initiallyExpanded: _showStackTrace,
+          title: Text(
+            'STACK TRACE',
+            style: LxTheme.sectionLabel.copyWith(color: LxTheme.textPrimary),
           ),
-        ),
-        leading: const Icon(Icons.code, color: Colors.blueGrey),
-        trailing: TextButton.icon(
-          onPressed: () {
-            Clipboard.setData(ClipboardData(text: log.stackTrace!));
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Stack trace copied to clipboard! 📋'),
-              ),
-            );
-          },
-          icon: const Icon(Icons.copy, size: 12),
-          label: const Text('Copy', style: TextStyle(fontSize: 11)),
-        ),
-        onExpansionChanged: (val) => setState(() => _showStackTrace = val),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: _buildStackTraceText(log.stackTrace!),
-              ),
+          leading: const Icon(Icons.code, color: LxTheme.accentBlue),
+          trailing: TextButton.icon(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: log.stackTrace!));
+              ScaffoldMessenger.of(context).showSnackBar(
+                LxTheme.snackBar('Stack trace copied to clipboard ✓'),
+              );
+            },
+            icon: const Icon(Icons.copy, size: 12, color: LxTheme.accentBlue),
+            label: Text(
+              'Copy',
+              style: LxTheme.mono.copyWith(fontSize: 11, color: LxTheme.accentBlue),
             ),
           ),
-        ],
+          onExpansionChanged: (val) => setState(() => _showStackTrace = val),
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: LxTheme.surfaceAlt,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: LxTheme.border),
+                ),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: _buildStackTraceText(log.stackTrace!),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -813,7 +789,7 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
       onLongPress: () {
         Clipboard.setData(ClipboardData(text: copyVal ?? value));
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Copied "$label" to clipboard! 📋')),
+          LxTheme.snackBar('Copied "$label" to clipboard ✓'),
         );
       },
       child: Padding(
@@ -827,20 +803,18 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
               width: 100,
               child: Text(
                 label,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black54,
-                  fontSize: 13,
+                style: LxTheme.monoSm.copyWith(
+                  color: LxTheme.textSecondary,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
             Expanded(
               child: Text(
                 value,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                  fontSize: 13,
+                style: LxTheme.mono.copyWith(
+                  fontSize: 12,
+                  color: LxTheme.textPrimary,
                 ),
               ),
             ),
@@ -851,28 +825,29 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
   }
 
   Widget _sectionDivider(String label) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Text(
-            '── $label ──────────────────────',
-            style: const TextStyle(
-              color: Colors.grey,
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-            ),
-            overflow: TextOverflow.ellipsis,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: LxTheme.sectionLabel.copyWith(color: LxTheme.textSecondary),
           ),
-        ),
-      ],
+          const SizedBox(width: 8),
+          Expanded(
+            child: Container(
+              height: 1,
+              color: LxTheme.border,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _jsonWidget(
     String rawJson,
     bool showFull, {
-    Color? tint,
     required VoidCallback onToggle,
   }) {
     String formatted;
@@ -892,8 +867,9 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: tint ?? Colors.grey.shade50,
+            color: LxTheme.surfaceAlt,
             borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: LxTheme.border),
           ),
           child: RichText(text: TextSpan(children: _highlightJson(display))),
         ),
@@ -904,7 +880,7 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
               onPressed: onToggle,
               child: Text(
                 showFull ? 'Show Less ↑' : 'Show More ↓',
-                style: const TextStyle(fontSize: 11),
+                style: LxTheme.mono.copyWith(fontSize: 11, color: LxTheme.accentBlue),
               ),
             ),
           ),
@@ -912,20 +888,16 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
     );
   }
 
-  Widget _diffBadge(String label, Color textColor, Color bgColor) {
+  Widget _diffBadge(String label, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: textColor.withValues(alpha: 0.3)),
-      ),
+      decoration: LxTheme.pill(color),
       child: Text(
         label,
         style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.bold,
-          color: textColor,
+          color: color,
         ),
       ),
     );
@@ -933,6 +905,12 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
 
   List<TextSpan> _highlightJson(String rawJson) {
     final spans = <TextSpan>[];
+    // Custom syntax highlighters for terminal style
+    // Keys (e.g. "key":) -> accentBlue
+    // Strings -> accentGreen
+    // Booleans/nulls -> accentRed (or accentPurple)
+    // Numbers -> accentOrange
+    // Syntax punctuation -> textSecondary
     final regex = RegExp(
       r'("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?)'
       r'|\b(true|false|null)\b'
@@ -948,58 +926,44 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
       if (match.start > lastMatchEnd) {
         spans.add(TextSpan(
           text: rawJson.substring(lastMatchEnd, match.start),
-          style: const TextStyle(
-            color: Colors.black87,
-            fontFamily: 'monospace',
-            fontSize: 11,
-          ),
+          style: LxTheme.mono.copyWith(color: LxTheme.textPrimary, fontSize: 11),
         ));
       }
 
       final token = match.group(0)!;
-      var style = const TextStyle(
-        color: Colors.black87,
-        fontFamily: 'monospace',
-        fontSize: 11,
-      );
+      var style = LxTheme.mono.copyWith(color: LxTheme.textPrimary, fontSize: 11);
 
       if (token.startsWith('"')) {
         style = token.endsWith(':')
-            ? const TextStyle(
-                color: Color(0xFF7B1FA2),
+            ? LxTheme.mono.copyWith(
+                color: LxTheme.accentBlue,
                 fontWeight: FontWeight.bold,
-                fontFamily: 'monospace',
                 fontSize: 11,
               )
-            : const TextStyle(
-                color: Color(0xFF2E7D32),
-                fontFamily: 'monospace',
+            : LxTheme.mono.copyWith(
+                color: LxTheme.accentGreen,
                 fontSize: 11,
               );
       } else if (token == 'true' || token == 'false') {
-        style = const TextStyle(
-          color: Color(0xFF1565C0),
+        style = LxTheme.mono.copyWith(
+          color: LxTheme.accentPurple,
           fontWeight: FontWeight.bold,
-          fontFamily: 'monospace',
           fontSize: 11,
         );
       } else if (token == 'null') {
-        style = const TextStyle(
-          color: Color(0xFFC62828),
+        style = LxTheme.mono.copyWith(
+          color: LxTheme.accentRed,
           fontWeight: FontWeight.bold,
-          fontFamily: 'monospace',
           fontSize: 11,
         );
       } else if (RegExp(r'^-?\d+').hasMatch(token)) {
-        style = const TextStyle(
-          color: Color(0xFFE65100),
-          fontFamily: 'monospace',
+        style = LxTheme.mono.copyWith(
+          color: LxTheme.accentOrange,
           fontSize: 11,
         );
       } else if (RegExp(r'[{}\[\]:,]').hasMatch(token)) {
-        style = const TextStyle(
-          color: Colors.grey,
-          fontFamily: 'monospace',
+        style = LxTheme.mono.copyWith(
+          color: LxTheme.textSecondary,
           fontSize: 11,
         );
       }
@@ -1011,11 +975,7 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
     if (lastMatchEnd < rawJson.length) {
       spans.add(TextSpan(
         text: rawJson.substring(lastMatchEnd),
-        style: const TextStyle(
-          color: Colors.black87,
-          fontFamily: 'monospace',
-          fontSize: 11,
-        ),
+        style: LxTheme.mono.copyWith(color: LxTheme.textPrimary, fontSize: 11),
       ));
     }
 
@@ -1038,7 +998,7 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
       spans.add(TextSpan(
         text: '$line\n',
         style: TextStyle(
-          color: isProjectLine ? Colors.blue.shade900 : Colors.grey.shade500,
+          color: isProjectLine ? LxTheme.accentBlue : LxTheme.textDim,
           fontWeight: isProjectLine ? FontWeight.bold : FontWeight.normal,
           fontFamily: 'monospace',
           fontSize: 11,
@@ -1103,10 +1063,7 @@ class _LxLogDetailScreenState extends State<LxLogDetailScreen> {
     await Clipboard.setData(ClipboardData(text: buffer.toString()));
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Log detail copied to clipboard! 📋'),
-          duration: Duration(seconds: 2),
-        ),
+        LxTheme.snackBar('Log detail copied to clipboard ✓'),
       );
     }
   }

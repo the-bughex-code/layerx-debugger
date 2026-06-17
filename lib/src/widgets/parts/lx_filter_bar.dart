@@ -1,10 +1,9 @@
-// Internal viewer widget — not part of the public API.
 // ignore_for_file: public_member_api_docs
 import 'package:flutter/material.dart';
-
 import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
 import 'package:layerx_debugger/src/config/enums/layerx_log_level.dart';
 import 'package:layerx_debugger/src/config/enums/layerx_log_source.dart';
+import 'package:layerx_debugger/src/config/lx_theme.dart';
 
 class LxFilterBar extends StatelessWidget {
   final List<LayerXLogEntry> allLogs;
@@ -25,150 +24,133 @@ class LxFilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final errorCount = allLogs
-        .where((l) =>
-            l.level == LayerXLogLevel.error || l.level == LayerXLogLevel.fatal)
+        .where((l) => l.level == LayerXLogLevel.error || l.level == LayerXLogLevel.fatal)
         .length;
-    final warningCount =
-        allLogs.where((l) => l.level == LayerXLogLevel.warning).length;
-    final successCount =
-        allLogs.where((l) => l.level == LayerXLogLevel.success).length;
-    final infoCount =
-        allLogs.where((l) => l.level == LayerXLogLevel.info).length;
-    final debugCount =
-        allLogs.where((l) => l.level == LayerXLogLevel.debug).length;
+    final warningCount = allLogs.where((l) => l.level == LayerXLogLevel.warning).length;
+    final successCount = allLogs.where((l) => l.level == LayerXLogLevel.success).length;
+    final infoCount = allLogs.where((l) => l.level == LayerXLogLevel.info).length;
+    final debugCount = allLogs.where((l) => l.level == LayerXLogLevel.debug).length;
 
     return Container(
-      color: Colors.grey.shade50,
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      color: LxTheme.surface,
       child: Column(
         children: [
+          // ── Top border ────────────────────────────────────────────────────
+          Container(height: 1, color: LxTheme.border),
+
+          const SizedBox(height: 10),
+
+          // ── Level filters ─────────────────────────────────────────────────
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                _levelChip(
-                  label: 'All',
-                  isSelected: selectedLevel == null,
-                  onSelected: () => onLevelChanged(null),
-                  color: Colors.blueGrey,
+                _pill('ALL', null, selectedLevel == null, LxTheme.accentBlue,
+                    () => onLevelChanged(null)),
+                _pill(
+                  'ERR${errorCount > 0 ? ' $errorCount' : ''}',
+                  null,
+                  selectedLevel == LayerXLogLevel.error,
+                  LxTheme.accentRed,
+                  () => onLevelChanged(LayerXLogLevel.error),
                 ),
-                _levelChip(
-                  label: 'Error${errorCount > 0 ? ' ($errorCount)' : ''}',
-                  isSelected: selectedLevel == LayerXLogLevel.error,
-                  onSelected: () => onLevelChanged(LayerXLogLevel.error),
-                  color: LayerXLogLevel.error.color,
+                _pill(
+                  'WARN${warningCount > 0 ? ' $warningCount' : ''}',
+                  null,
+                  selectedLevel == LayerXLogLevel.warning,
+                  LxTheme.accentAmber,
+                  () => onLevelChanged(LayerXLogLevel.warning),
                 ),
-                _levelChip(
-                  label: 'Warning${warningCount > 0 ? ' ($warningCount)' : ''}',
-                  isSelected: selectedLevel == LayerXLogLevel.warning,
-                  onSelected: () => onLevelChanged(LayerXLogLevel.warning),
-                  color: LayerXLogLevel.warning.color,
+                _pill(
+                  'OK${successCount > 0 ? ' $successCount' : ''}',
+                  null,
+                  selectedLevel == LayerXLogLevel.success,
+                  LxTheme.accentGreen,
+                  () => onLevelChanged(LayerXLogLevel.success),
                 ),
-                _levelChip(
-                  label: 'Success${successCount > 0 ? ' ($successCount)' : ''}',
-                  isSelected: selectedLevel == LayerXLogLevel.success,
-                  onSelected: () => onLevelChanged(LayerXLogLevel.success),
-                  color: LayerXLogLevel.success.color,
+                _pill(
+                  'INFO${infoCount > 0 ? ' $infoCount' : ''}',
+                  null,
+                  selectedLevel == LayerXLogLevel.info,
+                  LxTheme.accentBlue,
+                  () => onLevelChanged(LayerXLogLevel.info),
                 ),
-                _levelChip(
-                  label: 'Info${infoCount > 0 ? ' ($infoCount)' : ''}',
-                  isSelected: selectedLevel == LayerXLogLevel.info,
-                  onSelected: () => onLevelChanged(LayerXLogLevel.info),
-                  color: LayerXLogLevel.info.color,
-                ),
-                _levelChip(
-                  label: 'Debug${debugCount > 0 ? ' ($debugCount)' : ''}',
-                  isSelected: selectedLevel == LayerXLogLevel.debug,
-                  onSelected: () => onLevelChanged(LayerXLogLevel.debug),
-                  color: LayerXLogLevel.debug.color,
+                _pill(
+                  'DBG${debugCount > 0 ? ' $debugCount' : ''}',
+                  null,
+                  selectedLevel == LayerXLogLevel.debug,
+                  LxTheme.accentPurple,
+                  () => onLevelChanged(LayerXLogLevel.debug),
                 ),
               ],
             ),
           ),
+
           const SizedBox(height: 8),
+
+          // ── Source filters ────────────────────────────────────────────────
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                _sourceChip(
-                  label: 'All Sources',
-                  isSelected: selectedSource == null,
-                  onSelected: () => onSourceChanged(null),
-                  color: Colors.blueGrey,
-                ),
-                _sourceChip(
-                  label: 'App',
-                  isSelected: selectedSource == LayerXLogSource.app,
-                  onSelected: () => onSourceChanged(LayerXLogSource.app),
-                  color: LayerXLogSource.app.color,
-                ),
-                _sourceChip(
-                  label: 'Server',
-                  isSelected: selectedSource == LayerXLogSource.server,
-                  onSelected: () => onSourceChanged(LayerXLogSource.server),
-                  color: LayerXLogSource.server.color,
-                ),
-                _sourceChip(
-                  label: 'Backend',
-                  isSelected: selectedSource == LayerXLogSource.backend,
-                  onSelected: () => onSourceChanged(LayerXLogSource.backend),
-                  color: LayerXLogSource.backend.color,
-                ),
-                _sourceChip(
-                  label: 'Network',
-                  isSelected: selectedSource == LayerXLogSource.network,
-                  onSelected: () => onSourceChanged(LayerXLogSource.network),
-                  color: LayerXLogSource.network.color,
-                ),
+                _pill('ALL SOURCES', null, selectedSource == null,
+                    LxTheme.textSecondary, () => onSourceChanged(null)),
+                _pill('APP', null, selectedSource == LayerXLogSource.app,
+                    LayerXLogSource.app.color, () => onSourceChanged(LayerXLogSource.app)),
+                _pill('SERVER', null, selectedSource == LayerXLogSource.server,
+                    LayerXLogSource.server.color,
+                    () => onSourceChanged(LayerXLogSource.server)),
+                _pill('BACKEND', null, selectedSource == LayerXLogSource.backend,
+                    LayerXLogSource.backend.color,
+                    () => onSourceChanged(LayerXLogSource.backend)),
+                _pill('NETWORK', null, selectedSource == LayerXLogSource.network,
+                    LayerXLogSource.network.color,
+                    () => onSourceChanged(LayerXLogSource.network)),
               ],
             ),
           ),
+
+          const SizedBox(height: 10),
+          Container(height: 1, color: LxTheme.border),
         ],
       ),
     );
   }
 
-  Widget _levelChip({
-    required String label,
-    required bool isSelected,
-    required VoidCallback onSelected,
-    required Color color,
-  }) =>
-      _chip(label, isSelected, onSelected, color);
-
-  Widget _sourceChip({
-    required String label,
-    required bool isSelected,
-    required VoidCallback onSelected,
-    required Color color,
-  }) =>
-      _chip(label, isSelected, onSelected, color);
-
-  Widget _chip(
+  Widget _pill(
     String label,
+    int? count,
     bool isSelected,
-    VoidCallback onSelected,
     Color color,
+    VoidCallback onTap,
   ) {
     return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: ChoiceChip(
-        label: Text(label),
-        labelStyle: TextStyle(
-          color: isSelected ? Colors.white : Colors.grey.shade800,
-          fontSize: 12,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      padding: const EdgeInsets.only(right: 6),
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: isSelected ? color.withValues(alpha: 0.15) : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: isSelected ? color.withValues(alpha: 0.6) : LxTheme.border,
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? color : LxTheme.textSecondary,
+              fontSize: 10,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              letterSpacing: 0.6,
+              fontFamily: 'monospace',
+            ),
+          ),
         ),
-        selected: isSelected,
-        selectedColor: color,
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: isSelected ? color : Colors.grey.shade300),
-        ),
-        onSelected: (_) => onSelected(),
       ),
     );
   }

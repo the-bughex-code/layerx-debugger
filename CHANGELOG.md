@@ -5,6 +5,18 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.0.5
+
+### Added
+
+- **Premium Dark UI Redesign** — Completely redesigned the in-app log viewer from scratch with a premium, high-end dark theme.
+  - Added new central `LxTheme` design-token system for colors, typography, glowing overlays, cards, and animated indicators.
+  - Redesigned `LxLogListScreen` with dark glass layout, live pulse dot, inline stats bar, custom clear confirmation dialog, and terminal-inspired empty state.
+  - Redesigned `LxLogDetailScreen` with dark terminal aesthetics, custom syntax highlighted JSON viewer, dark schema diff tables, and custom level-based accent glow cards.
+  - Updated widgets (`LxFabTrigger`, `LxEdgeTrigger`, `LxFilterBar`, `LxLogTile`, `LxSourceChip`, `LxDetailCard`, `LxSolutionCard`, `LxJourneyTimeline`) to align with the premium dark theme and utilize glowing accents.
+
+---
+
 ## 1.0.4
 
 ### Fixed

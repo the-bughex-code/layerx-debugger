@@ -1,6 +1,7 @@
 // Internal viewer screen — not part of the public API.
 // ignore_for_file: public_member_api_docs
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:layerx_debugger/src/core/layerx_debugger_initializer.dart';
 import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
@@ -10,6 +11,7 @@ import 'package:layerx_debugger/src/repository/layerx_log_store.dart';
 import 'package:layerx_debugger/src/widgets/parts/lx_filter_bar.dart';
 import 'package:layerx_debugger/src/widgets/parts/lx_log_tile.dart';
 import 'package:layerx_debugger/src/mvvm/view/lx_log_detail_screen.dart';
+import 'package:layerx_debugger/src/config/lx_theme.dart';
 
 class LxLogListScreen extends StatefulWidget {
   const LxLogListScreen({super.key});
@@ -18,377 +20,319 @@ class LxLogListScreen extends StatefulWidget {
   State<LxLogListScreen> createState() => _LxLogListScreenState();
 }
 
-class _LxLogListScreenState extends State<LxLogListScreen> {
+class _LxLogListScreenState extends State<LxLogListScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
   String _searchQuery = '';
   LayerXLogLevel? _selectedLevel;
   LayerXLogSource? _selectedSource;
-  bool _showStatsBanner = true;
+
+  late final AnimationController _headerCtrl;
+  late final Animation<double> _headerAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _headerCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..forward();
+    _headerAnim = CurvedAnimation(parent: _headerCtrl, curve: Curves.easeOutCubic);
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _headerCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<List<LayerXLogEntry>>(
-      valueListenable: LayerXLogStore.logsNotifier,
-      builder: (context, allLogs, _) {
-        final filteredLogs = _applyFilters(allLogs);
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+      ),
+      child: ValueListenableBuilder<List<LayerXLogEntry>>(
+        valueListenable: LayerXLogStore.logsNotifier,
+        builder: (context, allLogs, _) {
+          final filteredLogs = _applyFilters(allLogs);
+          final errorCount = allLogs
+              .where((l) =>
+                  l.level == LayerXLogLevel.error ||
+                  l.level == LayerXLogLevel.fatal)
+              .length;
+          final warningCount =
+              allLogs.where((l) => l.level == LayerXLogLevel.warning).length;
+          final apiChanged =
+              allLogs.where((l) => l.responseChanged).length;
 
-        final totalCount = allLogs.length;
-        final errorCount = allLogs
-            .where((log) =>
-                log.level == LayerXLogLevel.error ||
-                log.level == LayerXLogLevel.fatal)
-            .length;
-        final warningCount =
-            allLogs.where((l) => l.level == LayerXLogLevel.warning).length;
-        final apiChangedCount = allLogs.where((l) => l.responseChanged).length;
-        final schemaChangeTotal =
-            allLogs.fold<int>(0, (sum, l) => sum + l.schemaChanges.length);
+          return Scaffold(
+            backgroundColor: LxTheme.bg,
+            appBar: _buildAppBar(allLogs.length, errorCount),
+            body: Column(
+              children: [
+                // ── Stats bar ──────────────────────────────────────────────
+                if (allLogs.isNotEmpty)
+                  FadeTransition(
+                    opacity: _headerAnim,
+                    child: _buildStatsBar(
+                      total: allLogs.length,
+                      errors: errorCount,
+                      warnings: warningCount,
+                      apiChanged: apiChanged,
+                    ),
+                  ),
 
-        return Scaffold(
-          backgroundColor: Colors.grey.shade100,
-          appBar: _buildAppBar(totalCount, errorCount),
-          body: Column(
-            children: [
-              if (allLogs.isNotEmpty && _showStatsBanner)
-                _buildStatsBanner(
-                  total: totalCount,
-                  errors: errorCount,
-                  warnings: warningCount,
-                  apiChanged: apiChangedCount,
-                  schemaChanges: schemaChangeTotal,
+                // ── Filter bar ─────────────────────────────────────────────
+                LxFilterBar(
+                  allLogs: allLogs,
+                  selectedLevel: _selectedLevel,
+                  selectedSource: _selectedSource,
+                  onLevelChanged: (l) => setState(() => _selectedLevel = l),
+                  onSourceChanged: (s) => setState(() => _selectedSource = s),
                 ),
-              LxFilterBar(
-                allLogs: allLogs,
-                selectedLevel: _selectedLevel,
-                selectedSource: _selectedSource,
-                onLevelChanged: (level) =>
-                    setState(() => _selectedLevel = level),
-                onSourceChanged: (source) =>
-                    setState(() => _selectedSource = source),
-              ),
-              Expanded(child: _buildLogList(filteredLogs, allLogs.isEmpty)),
-            ],
-          ),
-        );
-      },
+
+                // ── Log list ───────────────────────────────────────────────
+                Expanded(
+                  child: _buildLogList(filteredLogs, allLogs.isEmpty),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
-  AppBar _buildAppBar(int totalCount, int errorCount) {
+  // ── App bar ────────────────────────────────────────────────────────────────
+  AppBar _buildAppBar(int total, int errors) {
     return AppBar(
+      backgroundColor: LxTheme.surface,
       elevation: 0,
-      backgroundColor: Colors.white,
-      iconTheme: const IconThemeData(color: Colors.black87),
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+      iconTheme: const IconThemeData(color: LxTheme.textSecondary, size: 20),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(height: 1, color: LxTheme.border),
+      ),
       title: _isSearching
           ? TextField(
               controller: _searchController,
               autofocus: true,
-              decoration: const InputDecoration(
-                hintText: 'Search logs...',
+              style: LxTheme.mono.copyWith(fontSize: 14),
+              cursorColor: LxTheme.accentBlue,
+              decoration: InputDecoration(
+                hintText: '> search logs...',
+                hintStyle: LxTheme.mono.copyWith(
+                  color: LxTheme.textDim,
+                  fontSize: 14,
+                ),
                 border: InputBorder.none,
-                hintStyle: TextStyle(color: Colors.grey, fontSize: 16),
               ),
-              style: const TextStyle(color: Colors.black87, fontSize: 16),
-              onChanged: (val) => setState(() => _searchQuery = val),
+              onChanged: (v) => setState(() => _searchQuery = v),
             )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  '🐛 LayerX Logger',
-                  style: TextStyle(
-                    color: Colors.black87,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                Row(
+                  children: [
+                    // Live pulse dot
+                    _pulseDot(errors > 0 ? LxTheme.accentRed : LxTheme.accentGreen),
+                    const SizedBox(width: 8),
+                    Text(
+                      'LAYERX DEBUGGER',
+                      style: LxTheme.sectionLabel.copyWith(
+                        fontSize: 13,
+                        color: LxTheme.textPrimary,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                  ],
                 ),
                 Text(
-                  '${LayerXDebugger.config.appName} • $totalCount logs • $errorCount errors',
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                  '${LayerXDebugger.config.appName}  ·  $total logs  ·  $errors errors',
+                  style: LxTheme.monoSm,
                 ),
               ],
             ),
       actions: [
         if (_isSearching)
           IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () {
-              setState(() {
-                _isSearching = false;
-                _searchQuery = '';
-                _searchController.clear();
-              });
-            },
+            icon: const Icon(Icons.close, size: 18),
+            onPressed: () => setState(() {
+              _isSearching = false;
+              _searchQuery = '';
+              _searchController.clear();
+            }),
           )
-        else
+        else ...[
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.search, size: 20),
             onPressed: () => setState(() => _isSearching = true),
           ),
-        IconButton(
-          icon: const Icon(Icons.copy_all_outlined),
-          tooltip: 'Export All Logs',
-          onPressed: () async {
-            final messenger = ScaffoldMessenger.of(context);
-            await LayerXLogStore.copyExportToClipboard();
-            messenger.showSnackBar(
-              const SnackBar(
-                content: Text('All logs exported & copied to clipboard! 📋'),
-                duration: Duration(seconds: 2),
-              ),
-            );
-          },
-        ),
-        IconButton(
-          icon:
-              const Icon(Icons.delete_sweep_outlined, color: Colors.redAccent),
-          tooltip: 'Clear All',
-          onPressed: () => _confirmClear(context),
-        ),
+          IconButton(
+            icon: const Icon(Icons.copy_all_outlined, size: 20),
+            tooltip: 'Export All',
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              await LayerXLogStore.copyExportToClipboard();
+              messenger.showSnackBar(LxTheme.snackBar('Logs copied to clipboard ✓'));
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_sweep_outlined, size: 20, color: LxTheme.accentRed),
+            tooltip: 'Clear All',
+            onPressed: () => _confirmClear(context),
+          ),
+        ],
       ],
     );
   }
 
-  Widget _buildStatsBanner({
+  // ── Stats bar ──────────────────────────────────────────────────────────────
+  Widget _buildStatsBar({
     required int total,
     required int errors,
     required int warnings,
     required int apiChanged,
-    required int schemaChanges,
   }) {
-    final String healthLabel;
-    final Color healthColor;
-    final IconData healthIcon;
-    final Color bgColor;
+    final healthColor = errors > 0
+        ? LxTheme.accentRed
+        : warnings > 0
+            ? LxTheme.accentAmber
+            : LxTheme.accentGreen;
 
-    if (errors > 0) {
-      healthLabel = 'Issues Detected';
-      healthColor = Colors.red.shade800;
-      healthIcon = Icons.error_outline;
-      bgColor = const Color(0xFFFFF1F1);
-    } else if (warnings > 0 || apiChanged > 0) {
-      healthLabel = 'Warnings Present';
-      healthColor = Colors.orange.shade800;
-      healthIcon = Icons.warning_amber_outlined;
-      bgColor = const Color(0xFFFFF8EE);
-    } else {
-      healthLabel = 'All Clear';
-      healthColor = const Color(0xFF2E7D32);
-      healthIcon = Icons.check_circle_outline;
-      bgColor = const Color(0xFFF1FAF1);
-    }
+    final healthLabel = errors > 0
+        ? 'ISSUES DETECTED'
+        : warnings > 0
+            ? 'WARNINGS'
+            : 'ALL CLEAR';
 
-    return GestureDetector(
-      onTap: () => setState(() => _showStatsBanner = !_showStatsBanner),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: double.infinity,
-        margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: healthColor.withValues(alpha: 0.25)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(healthIcon, color: healthColor, size: 16),
-                const SizedBox(width: 6),
-                Text(
-                  'SESSION HEALTH: $healthLabel',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: healthColor,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const Spacer(),
-                Icon(Icons.expand_less,
-                    size: 14, color: healthColor.withValues(alpha: 0.6)),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                _statChip(
-                  value: total.toString(),
-                  label: 'Total',
-                  color: Colors.blueGrey.shade700,
-                  bg: Colors.blueGrey.shade50,
-                ),
-                const SizedBox(width: 6),
-                _statChip(
-                  value: errors.toString(),
-                  label: 'Errors',
-                  color:
-                      errors > 0 ? Colors.red.shade800 : Colors.grey.shade500,
-                  bg: errors > 0 ? Colors.red.shade50 : Colors.grey.shade100,
-                ),
-                const SizedBox(width: 6),
-                _statChip(
-                  value: warnings.toString(),
-                  label: 'Warnings',
-                  color: warnings > 0
-                      ? Colors.orange.shade800
-                      : Colors.grey.shade500,
-                  bg: warnings > 0
-                      ? Colors.orange.shade50
-                      : Colors.grey.shade100,
-                ),
-                const SizedBox(width: 6),
-                if (apiChanged > 0)
-                  _statChip(
-                    value: apiChanged.toString(),
-                    label: 'API Changed',
-                    color: Colors.orange.shade800,
-                    bg: Colors.orange.shade50,
-                    icon: Icons.swap_horiz,
-                  ),
-                if (schemaChanges > 0) ...[
-                  const SizedBox(width: 6),
-                  _statChip(
-                    value: schemaChanges.toString(),
-                    label: 'Schema Diffs',
-                    color: const Color(0xFF6A1B9A),
-                    bg: const Color(0xFFF3E5F5),
-                    icon: Icons.data_object_outlined,
-                  ),
-                ],
-              ],
-            ),
-            if (errors > 0 || apiChanged > 0) ...[
-              const SizedBox(height: 8),
-              const Divider(height: 1, thickness: 0.5),
-              const SizedBox(height: 6),
-              _buildAttributionHints(errors: errors, apiChanged: apiChanged),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _statChip({
-    required String value,
-    required String label,
-    required Color color,
-    required Color bg,
-    IconData? icon,
-  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
+      color: LxTheme.surface,
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
-          if (icon != null) ...[
-            Icon(icon, size: 10, color: color),
-            const SizedBox(width: 3),
-          ],
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                  height: 1,
+          // Health indicator
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: healthColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(5),
+              border: Border.all(color: healthColor.withValues(alpha: 0.4)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 5,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: healthColor,
+                    shape: BoxShape.circle,
+                    boxShadow: LxTheme.glowShadow(healthColor, spread: 2),
+                  ),
                 ),
-              ),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 8,
-                  color: color.withValues(alpha: 0.8),
-                  fontWeight: FontWeight.w500,
+                const SizedBox(width: 5),
+                Text(
+                  healthLabel,
+                  style: TextStyle(
+                    color: healthColor,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1,
+                    fontFamily: 'monospace',
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
+          const SizedBox(width: 10),
+          _statItem(total.toString(), 'TOTAL', LxTheme.accentBlue),
+          const SizedBox(width: 10),
+          if (errors > 0) _statItem(errors.toString(), 'ERR', LxTheme.accentRed),
+          if (errors > 0) const SizedBox(width: 10),
+          if (warnings > 0) _statItem(warnings.toString(), 'WARN', LxTheme.accentAmber),
+          if (warnings > 0) const SizedBox(width: 10),
+          if (apiChanged > 0) _statItem(apiChanged.toString(), 'API Δ', LxTheme.accentOrange),
         ],
       ),
     );
   }
 
-  Widget _buildAttributionHints(
-      {required int errors, required int apiChanged}) {
-    return Wrap(
-      spacing: 6,
-      runSpacing: 4,
+  Widget _statItem(String value, String label, Color color) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        if (errors > 0)
-          _hintChip(
-            '🔍 Tap a red log → "WHO OWNS THIS BUG?" for team attribution',
-            Colors.red.shade800,
-            const Color(0xFFFFEBEE),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            fontFamily: 'monospace',
+            height: 1,
           ),
-        if (apiChanged > 0)
-          _hintChip(
-            '🔄 $apiChanged endpoint${apiChanged > 1 ? 's' : ''} changed — tap orange badge to see diff',
-            Colors.orange.shade800,
-            const Color(0xFFFFF3E0),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: color.withValues(alpha: 0.6),
+            fontSize: 8,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.8,
+            fontFamily: 'monospace',
           ),
+        ),
       ],
     );
   }
 
-  Widget _hintChip(String text, Color textColor, Color bg) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 10,
-          color: textColor,
-          fontWeight: FontWeight.w500,
-          height: 1.3,
+  Widget _pulseDot(Color color) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.4, end: 1.0),
+      duration: const Duration(milliseconds: 900),
+      curve: Curves.easeInOut,
+      builder: (_, v, __) => Container(
+        width: 6,
+        height: 6,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color.withValues(alpha: v),
+          boxShadow: [BoxShadow(color: color.withValues(alpha: v * 0.6), blurRadius: 6)],
         ),
       ),
+      onEnd: () => setState(() {}), // retrigger
     );
   }
 
-  Widget _buildLogList(List<LayerXLogEntry> filteredLogs, bool isStoreEmpty) {
-    if (isStoreEmpty) {
+  // ── Log list ───────────────────────────────────────────────────────────────
+  Widget _buildLogList(List<LayerXLogEntry> filteredLogs, bool isEmpty) {
+    if (isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.track_changes, size: 64, color: Colors.grey.shade400),
-            const SizedBox(height: 16),
-            Text(
-              'No logs yet',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade700,
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: LxTheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: LxTheme.border),
               ),
+              child: const Icon(Icons.terminal, size: 40, color: LxTheme.textDim),
             ),
+            const SizedBox(height: 20),
+            const Text('NO LOGS YET', style: LxTheme.sectionLabel),
             const SizedBox(height: 8),
             Text(
               'Interact with the app to generate logs.',
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+              style: LxTheme.bodySecondary,
             ),
           ],
         ),
@@ -400,24 +344,24 @@ class _LxLogListScreenState extends State<LxLogListScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.filter_list_off, size: 64, color: Colors.grey.shade400),
+            const Icon(Icons.filter_list_off, size: 40, color: LxTheme.textDim),
             const SizedBox(height: 16),
-            Text(
-              'No logs match this filter',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade700,
+            const Text('NO MATCHES', style: LxTheme.sectionLabel),
+            const SizedBox(height: 16),
+            GestureDetector(
+              onTap: _clearFilters,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: LxTheme.accentBlue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: LxTheme.accentBlue.withValues(alpha: 0.4)),
+                ),
+                child: Text(
+                  'CLEAR FILTERS',
+                  style: LxTheme.sectionLabel.copyWith(color: LxTheme.accentBlue),
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueGrey,
-                foregroundColor: Colors.white,
-              ),
-              onPressed: _clearFilters,
-              child: const Text('Clear Filter'),
             ),
           ],
         ),
@@ -431,36 +375,38 @@ class _LxLogListScreenState extends State<LxLogListScreen> {
         final log = filteredLogs[index];
         return LxLogTile(
           log: log,
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (context) => LxLogDetailScreen(log: log),
+          onTap: () => Navigator.of(context).push(
+            PageRouteBuilder<void>(
+              pageBuilder: (_, a, __) => LxLogDetailScreen(log: log),
+              transitionsBuilder: (_, a, __, child) => SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(1, 0),
+                  end: Offset.zero,
+                ).animate(CurvedAnimation(parent: a, curve: Curves.easeOutCubic)),
+                child: child,
               ),
-            );
-          },
+              transitionDuration: const Duration(milliseconds: 300),
+            ),
+          ),
           onDelete: () => LayerXLogStore.deleteLog(log.id),
         );
       },
     );
   }
 
-  List<LayerXLogEntry> _applyFilters(List<LayerXLogEntry> allLogs) {
-    return allLogs.where((log) {
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  List<LayerXLogEntry> _applyFilters(List<LayerXLogEntry> all) {
+    return all.where((log) {
       if (_selectedLevel != null) {
         if (_selectedLevel == LayerXLogLevel.error) {
-          if (log.level != LayerXLogLevel.error &&
-              log.level != LayerXLogLevel.fatal) {
+          if (log.level != LayerXLogLevel.error && log.level != LayerXLogLevel.fatal) {
             return false;
           }
         } else if (log.level != _selectedLevel) {
           return false;
         }
       }
-
-      if (_selectedSource != null && log.source != _selectedSource) {
-        return false;
-      }
-
+      if (_selectedSource != null && log.source != _selectedSource) return false;
       if (_searchQuery.isNotEmpty) {
         final q = _searchQuery.toLowerCase();
         final matches = log.message.toLowerCase().contains(q) ||
@@ -470,46 +416,85 @@ class _LxLogListScreenState extends State<LxLogListScreen> {
             (log.errorCode ?? '').toLowerCase().contains(q);
         if (!matches) return false;
       }
-
       return true;
     }).toList();
   }
 
-  void _clearFilters() {
-    setState(() {
-      _selectedLevel = null;
-      _selectedSource = null;
-      _searchQuery = '';
-      _isSearching = false;
-      _searchController.clear();
-    });
-  }
+  void _clearFilters() => setState(() {
+        _selectedLevel = null;
+        _selectedSource = null;
+        _searchQuery = '';
+        _isSearching = false;
+        _searchController.clear();
+      });
 
   void _confirmClear(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Clear all logs?'),
-        content: const Text(
-          'This will clear the current in-memory log database and all response history.',
+      builder: (ctx) => Dialog(
+        backgroundColor: LxTheme.surfaceAlt,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: LxTheme.border),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.warning_amber_outlined,
+                      color: LxTheme.accentRed, size: 20),
+                  const SizedBox(width: 10),
+                  Text(
+                    'CLEAR ALL LOGS',
+                    style: LxTheme.sectionLabel.copyWith(color: LxTheme.accentRed),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'This will clear all in-memory logs and response history.\nThis action cannot be undone.',
+                style: LxTheme.bodySecondary,
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(ctx),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Text('Cancel', style: LxTheme.bodySecondary),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: () {
+                      LayerXLogStore.clear();
+                      Navigator.pop(ctx);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: LxTheme.accentRed.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                            color: LxTheme.accentRed.withValues(alpha: 0.5)),
+                      ),
+                      child: Text(
+                        'Clear',
+                        style: LxTheme.labelBold.copyWith(color: LxTheme.accentRed),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () {
-              LayerXLogStore.clear();
-              Navigator.pop(ctx);
-            },
-            child: const Text('Clear'),
-          ),
-        ],
+        ),
       ),
     );
   }
