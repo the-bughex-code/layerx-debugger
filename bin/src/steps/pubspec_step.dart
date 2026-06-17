@@ -43,11 +43,11 @@ class PubspecStep {
     final insertAt = depIndex + marker.length;
     content =
         '${content.substring(0, insertAt)}\n'
-        '  layerx_debugger: ^1.0.2'
+        '  layerx_debugger: ^1.0.6'
         '${content.substring(insertAt)}';
 
     pubspecFile.writeAsStringSync(content);
-    CliPrinter.success('layerx_debugger ^1.0.2 added to pubspec.yaml');
+    CliPrinter.success('layerx_debugger ^1.0.6 added to pubspec.yaml');
 
     // Run flutter pub get.
     CliPrinter.step('Running flutter pub get ...');

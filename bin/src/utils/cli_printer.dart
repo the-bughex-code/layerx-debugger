@@ -45,7 +45,7 @@ class CliPrinter {
       '  ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝'
       '$_reset',
     );
-    print('  $_dim$_cyan Debugger Setup Tool v1.0.0$_reset');
+    print('  $_dim$_cyan Debugger Setup Tool v1.0.6$_reset');
     print('');
   }
 

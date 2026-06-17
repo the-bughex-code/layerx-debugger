@@ -5,6 +5,16 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.0.6
+
+### Added
+
+- **Auto-Setup CLI & Automatic Bindings** — Created a fully automated `dart run layerx_debugger:setup` command to seamlessly inject setup parameters, wrap `main.dart`, integrate overlay, and dynamically bind Logger and HTTP service configurations.
+- **Idempotent CLI Steps** — Steps are verified to be fully idempotent, preventing redundant code modifications.
+- **Constructor Injection Precision** — Added robust parsing to safely patch Logger constructors and target classes without creating stray formatting or trailing comma syntax issues.
+
+---
+
 ## 1.0.5
 
 ### Added
