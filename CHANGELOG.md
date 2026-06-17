@@ -5,7 +5,28 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.0.4
+
+### Fixed
+
+- **Architecture detection now uses folder structure, not class names** — the
+  `dart run layerx_debugger:setup` CLI previously scanned source files for
+  `LayerXController` / `LayerXService` class names, which caused false negatives
+  on valid LayerX projects. Detection now checks for the canonical LayerX folder
+  layout under `lib/app/`:
+  - `lib/app/mvvm/` — required
+  - `lib/app/services/` — required
+  - `lib/app/config/`, `lib/app/repository/`, `lib/app/widgets/`,
+    `lib/app/customWidgets/` — optional (shown as ✓ if present, never required)
+
+  A project is considered LayerX-compliant if `lib/app/` exists and at least
+  one of the required folders is present. The abort message now also shows the
+  exact expected folder structure to make the requirement clear.
+
+---
+
 ## 1.0.3
+
 
 ### Added
 

@@ -3,90 +3,116 @@ import 'dart:io';
 
 import '../utils/cli_printer.dart';
 
-/// Result of scanning the project for LayerX architecture patterns.
+/// Result of scanning the project for LayerX folder structure.
 class LayerXDetectionResult {
   final bool isLayerXProject;
-  final List<String> foundSignals;
+  final List<String> foundFolders;
+  final List<String> missingRequired;
 
   const LayerXDetectionResult({
     required this.isLayerXProject,
-    required this.foundSignals,
+    required this.foundFolders,
+    required this.missingRequired,
   });
 }
 
-/// Scans the project's lib/ folder for LayerX architecture signals:
-///   - Classes extending LayerXController
-///   - Classes extending LayerXService
-///   - Usage of LayerXDebugMixin
-///   - GetMaterialApp / GetPage (GetX routing)
+/// Detects LayerX Architecture by checking folder structure under lib/.
+///
+/// LayerX standard layout:
+///   lib/
+///     app/                ← required wrapper
+///       mvvm/             ← REQUIRED (views, view_models, models)
+///       services/         ← REQUIRED
+///       config/           ← optional
+///       repository/       ← optional
+///       widgets/          ← optional
+///       customWidgets/    ← optional
+///   main.dart
+///
+/// Detection passes if lib/app/ exists AND at least one of
+/// the REQUIRED folders (mvvm, services) is present inside it.
 class LayerXDetectorStep {
   final String projectRoot;
 
   LayerXDetectorStep(this.projectRoot);
 
-  static const _signals = {
-    'LayerXController': r'\bextends\s+LayerXController\b',
-    'LayerXService': r'\bextends\s+LayerXService\b',
-    'LayerXDebugMixin': r'\bwith\s+LayerXDebugMixin\b',
-    'GetMaterialApp': r'\bGetMaterialApp\b',
-    'GetPage routes': r'\bGetPage\b',
-  };
+  // Must have at least one of these to be considered LayerX.
+  static const _requiredFolders = ['mvvm', 'services'];
+
+  // These are recognised but optional — shown as ✓ if found.
+  static const _optionalFolders = [
+    'config',
+    'repository',
+    'widgets',
+    'customWidgets',
+  ];
 
   LayerXDetectionResult run() {
-    CliPrinter.step('Scanning for LayerX architecture patterns ...');
+    CliPrinter.step('Scanning folder structure for LayerX Architecture ...');
 
-    final libDir = Directory('$projectRoot/lib');
-    if (!libDir.existsSync()) {
-      CliPrinter.warning('lib/ not found — skipping architecture scan.');
-      return const LayerXDetectionResult(
+    final appDir = Directory('$projectRoot/lib/app');
+    final found = <String>[];
+    final missingRequired = <String>[];
+
+    if (!appDir.existsSync()) {
+      // No lib/app/ at all — definitely not LayerX.
+      return LayerXDetectionResult(
         isLayerXProject: false,
-        foundSignals: [],
+        foundFolders: [],
+        missingRequired: _requiredFolders,
       );
     }
 
-    // Collect all Dart source under lib/.
-    final allSource = libDir
-        .listSync(recursive: true)
-        .whereType<File>()
-        .where((f) => f.path.endsWith('.dart'))
-        .map((f) => f.readAsStringSync())
-        .join('\n');
-
-    final found = <String>[];
-    for (final entry in _signals.entries) {
-      if (RegExp(entry.value).hasMatch(allSource)) {
-        found.add(entry.key);
+    // Check required folders.
+    for (final name in _requiredFolders) {
+      if (Directory('${appDir.path}/$name').existsSync()) {
+        found.add(name);
+      } else {
+        missingRequired.add(name);
       }
     }
 
-    // LayerX confirmed only if at least one of the core class patterns found.
-    final isLayerX =
-        found.contains('LayerXController') || found.contains('LayerXService');
+    // Check optional folders (just for display).
+    for (final name in _optionalFolders) {
+      if (Directory('${appDir.path}/$name').existsSync()) {
+        found.add(name);
+      }
+    }
 
-    return LayerXDetectionResult(isLayerXProject: isLayerX, foundSignals: found);
+    // LayerX confirmed if lib/app/ exists + at least one required folder.
+    final isLayerX =
+        appDir.existsSync() && missingRequired.length < _requiredFolders.length;
+
+    return LayerXDetectionResult(
+      isLayerXProject: isLayerX,
+      foundFolders: found,
+      missingRequired: missingRequired,
+    );
   }
 
-  /// Prints result and returns true to continue setup, false to abort.
+  /// Prints the detection result and returns true to continue, false to abort.
   bool printAndDecide(LayerXDetectionResult result) {
-    if (result.foundSignals.isNotEmpty) {
-      for (final s in result.foundSignals) {
-        CliPrinter.success('LayerX signal found → $s');
-      }
-    }
-
-    if (result.isLayerXProject) {
-      CliPrinter.success('LayerX architecture confirmed ✓');
-      return true;
-    }
-
-    // ── NOT a LayerX project — show clear message and abort ──────────────────
+    const green = '\x1B[32m';
     const yellow = '\x1B[33m';
-    const bold = '\x1B[1m';
     const cyan = '\x1B[36m';
+    const bold = '\x1B[1m';
     const dim = '\x1B[2m';
     const underline = '\x1B[4m';
     const reset = '\x1B[0m';
 
+    if (result.foundFolders.isNotEmpty) {
+      CliPrinter.success('lib/app/ found ✓');
+      for (final f in result.foundFolders) {
+        print('$green    ✓  lib/app/$f/$reset');
+      }
+    }
+
+    if (result.isLayerXProject) {
+      CliPrinter.success('LayerX folder structure confirmed ✓');
+      return true;
+    }
+
+    // ── NOT a LayerX project ─────────────────────────────────────────────────
     print('');
     print(
       '$bold$yellow'
@@ -99,16 +125,39 @@ class LayerXDetectorStep {
     print(
       '$bold  layerx_debugger is built for the LayerX Architecture pattern.$reset',
     );
+
+    if (!Directory('$projectRoot/lib/app').existsSync()) {
+      print('$dim  lib/app/ folder not found.$reset');
+    } else {
+      print(
+        '$dim  lib/app/ found but missing required sub-folders: '
+        '${result.missingRequired.map((f) => 'app/$f/').join(', ')}$reset',
+      );
+    }
+
+    print('');
     print(
-      '$dim  No LayerXController or LayerXService was detected in lib/.$reset',
+      '$bold  Expected LayerX folder structure:$reset\n'
+      '$dim'
+      '    lib/\n'
+      '      app/\n'
+      '        mvvm/           ← required\n'
+      '        services/       ← required\n'
+      '        config/         ← optional\n'
+      '        repository/     ← optional\n'
+      '        widgets/        ← optional\n'
+      '        customWidgets/  ← optional\n'
+      '      main.dart'
+      '$reset',
     );
+
     print('');
     CliPrinter.divider();
     print('');
-    print('$bold  👉  Please migrate to LayerX Architecture first:$reset');
+    print('$bold  👉  Set up LayerX Architecture first:$reset');
     print('');
     print(
-      '  $cyan 1.$reset  Add $bold layerx_generator$reset to your dev_dependencies:',
+      '  $cyan 1.$reset  Add $bold layerx_generator$reset to dev_dependencies:',
     );
     print('');
     print(
@@ -123,16 +172,14 @@ class LayerXDetectorStep {
     );
     print('');
     print(
-      '  $cyan 3.$reset  Generate your controllers & services using the generator,',
+      '  $cyan 3.$reset  Generate structure, then re-run:',
     );
-    print('         then re-run:');
-    print('');
     print('$dim         dart run layerx_debugger:setup$reset');
     print('');
     CliPrinter.divider();
     print('');
     CliPrinter.info(
-      'Setup aborted. Convert your app to LayerX Architecture first, then retry.',
+      'Setup aborted. Create the LayerX folder structure first, then retry.',
     );
     print('');
 
