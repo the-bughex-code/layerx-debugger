@@ -37,10 +37,11 @@ class LayerXDetectorStep {
   LayerXDetectorStep(this.projectRoot);
 
   // Must have at least one of these to be considered LayerX.
-  static const _requiredFolders = ['mvvm', 'services'];
+  static const _requiredFolders = ['mvvm'];
 
   // These are recognised but optional — shown as ✓ if found.
   static const _optionalFolders = [
+    'services',
     'config',
     'repository',
     'widgets',
@@ -130,8 +131,8 @@ class LayerXDetectorStep {
       print('$dim  lib/app/ folder not found.$reset');
     } else {
       print(
-        '$dim  lib/app/ found but missing required sub-folders: '
-        '${result.missingRequired.map((f) => 'app/$f/').join(', ')}$reset',
+        '$dim  lib/app/ found but missing required sub-folder: '
+        'app/mvvm/$reset',
       );
     }
 
@@ -142,7 +143,7 @@ class LayerXDetectorStep {
       '    lib/\n'
       '      app/\n'
       '        mvvm/           ← required\n'
-      '        services/       ← required\n'
+      '        services/       ← optional\n'
       '        config/         ← optional\n'
       '        repository/     ← optional\n'
       '        widgets/        ← optional\n'
