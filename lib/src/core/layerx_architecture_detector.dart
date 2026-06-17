@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 
-import '../logger/layerx_log.dart';
-import '../models/layerx_architecture_report.dart';
-import 'layerx_debug_config.dart';
+import 'package:layerx_debugger/src/services/logger/layerx_log.dart';
+import 'package:layerx_debugger/src/mvvm/model/layerx_architecture_report.dart';
+import 'package:layerx_debugger/src/config/layerx_debug_config.dart';
 
 /// Best-effort, runtime architecture detection for LayerX.
 ///

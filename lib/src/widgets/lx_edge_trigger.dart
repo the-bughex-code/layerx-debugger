@@ -2,9 +2,9 @@
 // ignore_for_file: public_member_api_docs
 import 'package:flutter/material.dart';
 
-import '../core/layerx_debug_config.dart';
-import '../core/layerx_debugger.dart';
-import 'screens/lx_log_list_screen.dart';
+import 'package:layerx_debugger/src/config/layerx_debug_config.dart';
+import 'package:layerx_debugger/src/core/layerx_debugger_initializer.dart';
+import 'package:layerx_debugger/src/mvvm/view/lx_log_list_screen.dart';
 
 class LxEdgeTrigger extends StatelessWidget {
   const LxEdgeTrigger({super.key});

@@ -2,9 +2,9 @@
 // ignore_for_file: public_member_api_docs
 import 'package:flutter/material.dart';
 
-import '../../models/layerx_log_entry.dart';
-import '../../models/layerx_log_level.dart';
-import '../../models/layerx_log_source.dart';
+import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
+import 'package:layerx_debugger/src/config/enums/layerx_log_level.dart';
+import 'package:layerx_debugger/src/config/enums/layerx_log_source.dart';
 
 class LxFilterBar extends StatelessWidget {
   final List<LayerXLogEntry> allLogs;

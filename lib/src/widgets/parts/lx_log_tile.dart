@@ -3,8 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../models/layerx_log_entry.dart';
-import 'lx_source_chip.dart';
+import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
+import 'package:layerx_debugger/src/widgets/parts/lx_source_chip.dart';
 
 class LxLogTile extends StatelessWidget {
   final LayerXLogEntry log;

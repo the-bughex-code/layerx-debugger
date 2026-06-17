@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../models/layerx_log_source.dart';
+import 'package:layerx_debugger/src/config/enums/layerx_log_source.dart';
 
 /// A small colored chip showing a log entry's [LayerXLogSource].
 class LxSourceChip extends StatelessWidget {

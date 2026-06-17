@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../models/layerx_log_entry.dart';
-import '../../utils/layerx_log_store.dart';
-import '../screens/lx_log_list_screen.dart';
+import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
+import 'package:layerx_debugger/src/repository/layerx_log_store.dart';
+import 'package:layerx_debugger/src/mvvm/view/lx_log_list_screen.dart';
 
 /// A ready-made list tile that opens the LayerX log viewer.
 ///

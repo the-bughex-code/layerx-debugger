@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:layerx_debugger/layerx_debugger.dart';
-import 'package:layerx_debugger/src/widgets/screens/lx_log_list_screen.dart';
+import 'package:layerx_debugger/src/mvvm/view/lx_log_list_screen.dart';
 
 void main() {
   setUp(() async {

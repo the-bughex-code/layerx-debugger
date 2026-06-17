@@ -13,6 +13,6 @@ linter:
   rules:
     # Every exported member must be documented.
     public_member_api_docs: true
-    # Keep intra-package imports relative and quoting consistent.
-    prefer_relative_imports: true
+    # Internal modules are referenced with absolute package: imports so the
+    # LayerX folder structure can evolve without churn.
     prefer_single_quotes: true

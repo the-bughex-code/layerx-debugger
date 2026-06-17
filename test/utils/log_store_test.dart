@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:layerx_debugger/layerx_debugger.dart';
-import 'package:layerx_debugger/src/utils/layerx_duplicate_guard.dart';
+import 'package:layerx_debugger/src/config/utils/layerx_duplicate_guard.dart';
 
 LayerXLogEntry _entry({
   required String id,

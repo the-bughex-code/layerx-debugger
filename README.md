@@ -1,38 +1,68 @@
-# layerx_debugger
+<h1 align="center">🐛 LayerX Debugger</h1>
 
-[![pub package](https://img.shields.io/pub/v/layerx_debugger.svg)](https://pub.dev/packages/layerx_debugger)
-[![License: BSD-3-Clause](https://img.shields.io/badge/license-BSD--3--Clause-blue.svg)](LICENSE)
-[![style: flutter_lints](https://img.shields.io/badge/style-flutter__lints-40c4ff.svg)](https://pub.dev/packages/flutter_lints)
+<p align="center"><b>In-app debugging for Flutter — a new era.</b></p>
 
-A **drop-in debugger and logger for Flutter & GetX**. One call to
-`LayerXDebugger.initialize()` gives you pretty console logs, automatic
-Dio/`http` capture, crash handling, route, widget and performance tracking, and
-a beautiful **in-app log viewer** with blame analysis and API response diffing.
+<p align="center">
+Stop scrolling through console spam. See every <b>log, API call, crash, route and rebuild</b>
+— live, <i>inside your running app</i> — with automatic <b>blame analysis</b>, <b>API response diffing</b>
+and a one-line setup.
+</p>
 
-Originally extracted from a production ride-hailing app, generalised for any
-Flutter project.
+<p align="center">
+  <a href="https://pub.dev/packages/layerx_debugger"><img src="https://img.shields.io/pub/v/layerx_debugger.svg?label=pub&color=blue" alt="pub version"></a>
+  <a href="https://pub.dev/packages/layerx_debugger/score"><img src="https://img.shields.io/pub/points/layerx_debugger?label=pub%20points&color=success" alt="pub points"></a>
+  <img src="https://img.shields.io/badge/platforms-Android%20%7C%20iOS%20%7C%20Web%20%7C%20Desktop-9cf" alt="platforms">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-BSD--3--Clause-blue.svg" alt="license"></a>
+  <img src="https://img.shields.io/badge/state%20mgmt-GetX-7E57C2" alt="getx">
+</p>
 
 ---
 
-## ✨ Features
+## Why LayerX Debugger?
 
-| | |
-|---|---|
-| 🎨 **Pretty console logs** | `LayerXLog.d/i/w/e/s` with colors, emojis & timestamps |
-| 📦 **Boxed API logs** | `┌─ │ └` request/response/error blocks |
-| 🌐 **Network capture** | `LayerXHttp` (`http`, **primary**) + an optional Dio recipe — **no forced dio dependency** |
-| 🔒 **Secret masking** | `password`, `token`, `authorization`, `apiKey`, `secret` (+ your own) → `********` |
-| 💥 **Crash handling** | `FlutterError`, `PlatformDispatcher` & zoned errors, with an `onCrash` hook for Crashlytics/Sentry |
-| 🧭 **Route logging** | `LayerXRouteObserver` (Navigator) + `LayerXRouteMiddleware` (GetX) |
-| 🧩 **GetX integration** | `LayerXController`, `LayerXService`, `LayerXDebugMixin` + auto-registered GetX services |
-| 🔎 **Auto setup & detection** | One `initialize()` detects LayerX/GetX, injects services (with duplicate & double-init guards), and activates modules incrementally |
-| 📲 **Screen & action logs** | `LayerXLog.screen('HomeView')`, `LayerXLog.action('Login tapped')` |
-| ⏱ **Profiling** | `LayerXProfiler.start/end/measure` |
-| 🔁 **Widget rebuilds** | `LayerXDebugWidget(tag: …)` rebuild counter |
-| 🐛 **In-app viewer** | Draggable FAB, edge swipe, searchable list, rich detail, "Who owns this bug?" blame engine, schema diff |
-| 🌱 **Environments** | `dev` / `staging` / `prod` control verbosity, colors & the viewer |
+Traditional Flutter debugging means squinting at a flood of `print` statements in a tiny
+console, far from the device QA is actually holding. **LayerX Debugger flips that** — the
+debugger lives *inside the app*. Your testers tap a floating 🐛 button and instantly see a
+beautiful, searchable timeline of everything that happened, plus answers to the question that
+wastes the most time on every team:
 
-## 📦 Installation
+> **"Who owns this bug — the app, the backend, or the network?"**
+
+One call, zero boilerplate, and it never ships to your users (it's environment-aware).
+
+```dart
+await LayerXDebugger.initialize(); // ✨ that's the whole setup
+```
+
+## ✨ What you get
+
+- 🐛 **In-app log viewer** — a draggable floating button + edge-swipe open a searchable,
+  filterable, color-coded log list with a live **session-health** banner.
+- 🕵️ **"Who owns this bug?" blame engine** — every error is attributed to app / backend /
+  network with a QA-ready note.
+- 🔀 **API response diffing** — when a backend silently changes its JSON shape, LayerX shows a
+  **field-level diff** (added / removed / type-changed / value-changed).
+- 🎨 **Gorgeous console logs** — `LayerXLog.d/i/w/e/s` with colors, emojis & timestamps, plus
+  boxed `┌─ │ └` API blocks.
+- 🌐 **Automatic network capture** — `LayerXHttp` (primary) logs every request/response/error
+  with timings; secrets (`password`, `token`, `authorization`, `apiKey`, `secret`) are masked.
+- 💥 **Crash capture** — `FlutterError`, `PlatformDispatcher` and zoned errors, with an
+  `onCrash` hook for Crashlytics / Sentry.
+- 🧩 **GetX-native** — `LayerXController` / `LayerXService` / `LayerXDebugMixin` lifecycle logs,
+  and auto-registered GetX services with duplicate & double-init guards.
+- ⏱ **Profiling & rebuild tracking** — `LayerXProfiler.measure(...)`, `LayerXDebugWidget(tag:)`.
+- 🌱 **Environment-aware** — `dev` / `staging` / `prod` control verbosity, colors and whether
+  the viewer is even available.
+
+## 📸 See it in action
+
+> Add `doc/viewer.png`, `doc/detail.png` and `doc/demo.gif` to showcase the viewer here.
+
+| Searchable log list | Rich detail + blame | API response diff |
+|---|---|---|
+| _`doc/viewer.png`_ | _`doc/detail.png`_ | _`doc/diff.png`_ |
+
+## 🚀 Install
 
 ```yaml
 dependencies:
@@ -43,7 +73,7 @@ dependencies:
 import 'package:layerx_debugger/layerx_debugger.dart';
 ```
 
-## 🚀 Quick Start
+## ⏱ 60-second Quick Start
 
 ```dart
 import 'package:flutter/material.dart';
@@ -66,47 +96,52 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      navigatorObservers: [LayerXDebugger.routeObserver],
-      builder: (context, child) => LayerXDebugOverlay(child: child!),
+      navigatorObservers: [LayerXDebugger.routeObserver],            // 🧭 route logs
+      builder: (context, child) => LayerXDebugOverlay(child: child!), // 🐛 in-app viewer
       home: const HomeView(),
     );
   }
 }
 ```
 
-That's it — a floating 🐛 button now appears in debug builds; tap it (or swipe
-in from the right edge) to open the log viewer.
+Run the app in debug mode — a floating 🐛 button appears. Tap it. Done.
+
+## 🐛 Opening the in-app viewer
+
+There are four ways to open the viewer — pick whatever fits your app:
+
+```dart
+// 1. Floating bug button  → automatic, from LayerXDebugOverlay (just tap it)
+// 2. Edge swipe           → swipe in from the right edge (also automatic)
+
+// 3. From ANY button you own:
+ElevatedButton(
+  onPressed: () => LayerXDebugger.openViewer(context),
+  child: const Text('Open Logs'),
+);
+
+// 4. A ready-made settings tile:
+const LayerXDebugSettingsButton(),
+```
+
+> `openViewer(context)` works even without the overlay — it simply pushes the viewer screen.
 
 ## 📝 Logging
 
 ```dart
-LayerXLog.d('User fetched');        // debug   (grey)
-LayerXLog.i('Cache warmed');        // info    (blue)
-LayerXLog.s('Payment captured');    // success (green)
-LayerXLog.w('Retrying request');    // warning (amber)
+LayerXLog.d('User fetched');     // debug   (grey)
+LayerXLog.i('Cache warmed');     // info    (blue)
+LayerXLog.s('Payment captured'); // success (green)
+LayerXLog.w('Retrying request'); // warning (amber)
 LayerXLog.e('API error', error: e, stackTrace: st); // error (red)
 
-// Or log any value inline:
-'Saved!'.logS();
-response.statusCode.logD();
+LayerXLog.screen('HomeView');           // [SCREEN] HomeView opened
+LayerXLog.action('Login Button Clicked'); // [ACTION] Login Button Clicked
+
+'Saved!'.logS(); // or log any value inline
 ```
 
-Need full structure for the viewer? Use `LayerXLog.log(...)`:
-
-```dart
-LayerXLog.log(
-  level: LayerXLogLevel.error,
-  message: 'Checkout failed',
-  screen: 'CheckoutView',
-  controller: 'CheckoutController',
-  endpoint: '/orders',
-  statusCode: 500,
-  error: e,
-  stackTrace: st,
-);
-```
-
-### Console output
+Console output:
 
 ```text
 ┌────────────────────────────────────────────────────────────
@@ -116,34 +151,22 @@ LayerXLog.log(
 └────────────────────────────────────────────────────────────
 ```
 
-Colors map to: **blue** = info, **green** = success, **amber** = warning,
-**red** = error, **grey** = debug. They are disabled automatically in
-production.
+## 🌐 Networking — `http` first
 
-## 🌐 HTTP Integration (primary)
-
-`http` is the primary, zero-config networking integration — just swap the
-top-level `http` calls for `LayerXHttp`:
+`http` is the primary, zero-config integration — just use `LayerXHttp`:
 
 ```dart
 final res = await LayerXHttp.get(Uri.parse('https://api.example.com/users'));
 await LayerXHttp.post(uri, headers: headers, body: jsonBody);
-// get / post / put / patch / delete are all supported.
+// get / post / put / patch / delete supported.
 ```
 
-Every request/response/error is logged with method, URL, headers, body, status,
-duration and a fix suggestion on failure. Sensitive fields are masked.
+### Dio (optional — never forced)
 
-## 🧩 Dio (optional — no forced dependency)
-
-LayerX deliberately does **not** depend on `dio`, so it's never forced on apps
-that use plain `http`. If your app already uses Dio, add a tiny interceptor that
+LayerX has **no dependency on `dio`**. If your app uses Dio, add a tiny interceptor that
 forwards to the public `LayerXNetworkLogger`:
 
 ```dart
-import 'package:dio/dio.dart';
-import 'package:layerx_debugger/layerx_debugger.dart';
-
 class LayerXDioInterceptor extends Interceptor {
   @override
   void onResponse(Response res, ResponseInterceptorHandler handler) {
@@ -153,8 +176,6 @@ class LayerXDioInterceptor extends Interceptor {
       statusCode: res.statusCode ?? 0,
       responseBody: res.data?.toString(),
       requestBody: res.requestOptions.data?.toString(),
-      requestHeaders: res.requestOptions.headers
-          .map((k, v) => MapEntry(k, '$v')),
     );
     handler.next(res);
   }
@@ -174,68 +195,30 @@ class LayerXDioInterceptor extends Interceptor {
 final dio = Dio()..interceptors.add(LayerXDioInterceptor());
 ```
 
-## 🔎 Automatic setup & detection
-
-`initialize()` detects whether the app is a LayerX/GetX app and, if so,
-auto-registers the LayerX GetX services (`LayerXLoggerService`,
-`LayerXDebugService`, `LayerXCrashService`, `LayerXNetworkService`,
-`LayerXPerformanceService`, `LayerXRouteService`) as permanent singletons —
-with duplicate-prevention and a double-initialization guard. It then prints a
-banner:
-
-```text
-[LayerX Debugger]
-
-✓ LayerX architecture detected
-✓ GetX detected
-✓ UI detected
-✓ Services registered
-⚠ Controllers not found yet
-⚠ API layer not found yet
-
-Debugger initialized with partial integration.
-```
-
-Modules light up **incrementally**: the first time a `LayerXController` runs or
-an HTTP request is logged, that module activates automatically. In a non-LayerX
-app, set `isLayerXArchitecture: false` (or `autoInject: false`) and LayerX
-injects nothing and only prints guidance — it never alters app behavior.
-
-## 📲 Screen & Action Logging
+## 🧩 GetX integration
 
 ```dart
-LayerXLog.screen('HomeView');          // [SCREEN] HomeView opened
-LayerXLog.action('Login Button Clicked'); // [ACTION] Login Button Clicked
-```
-
-## 🧩 GetX Integration
-
-```dart
-// Extend the base classes…
-class HomeController extends LayerXController {}
+class HomeController extends LayerXController {}          // lifecycle auto-logged
 class AuthService   extends LayerXService {}
-
-// …or mix into an existing controller:
-class CartController extends GetxController with LayerXDebugMixin {}
+class CartController extends GetxController with LayerXDebugMixin {} // mix into existing
 ```
 
-`onInit`, `onReady` and `onClose` are logged automatically.
+`initialize()` auto-registers the LayerX GetX services (`LayerXLoggerService`,
+`LayerXDebugService`, `LayerXCrashService`, `LayerXNetworkService`,
+`LayerXPerformanceService`, `LayerXRouteService`) as permanent singletons — with
+duplicate-prevention and a double-initialization guard. Modules light up incrementally as
+controllers and the network layer are exercised. Set `isLayerXArchitecture: false` (or
+`autoInject: false`) to skip all injection in a non-LayerX app.
 
-## 🧭 Route Debugging
+## 🧭 Route debugging
 
 ```dart
-// Navigator / GetX (app-wide):
 GetMaterialApp(navigatorObservers: [LayerXDebugger.routeObserver]);
-
-// GetX per-page middleware:
+// per-page GetX middleware:
 GetPage(name: '/home', page: () => HomeView(), middlewares: [LayerXRouteMiddleware()]);
 ```
 
-## 💥 Crash Handling
-
-`initialize()` installs global handlers for `FlutterError.onError` and
-`PlatformDispatcher.onError`, and `LayerXDebugger.runZonedGuarded` captures
-uncaught async errors. Forward everything to your reporter via `onCrash`:
+## 💥 Crash handling
 
 ```dart
 await LayerXDebugger.initialize(
@@ -248,26 +231,15 @@ await LayerXDebugger.initialize(
 );
 ```
 
-> Crashlytics and Sentry are **optional** — the package has no dependency on
-> them and works completely standalone.
+> Crashlytics & Sentry are **optional** — LayerX depends on neither and works standalone.
 
-## ⏱ Performance Monitoring
+## ⏱ Performance & 🔁 rebuilds
 
 ```dart
 final users = await LayerXProfiler.measure('fetchUsers', () => api.fetchUsers());
+LayerXProfiler.start('render'); /* ... */ LayerXProfiler.end('render');
 
-LayerXProfiler.start('render');
-// ... work ...
-LayerXProfiler.end('render');
-```
-
-## 🔁 Widget Monitoring
-
-```dart
-LayerXDebugWidget(
-  tag: 'HomeView',
-  child: HomeView(),
-); // logs "HomeView rebuilt N times"
+LayerXDebugWidget(tag: 'HomeView', child: HomeView()); // logs "HomeView rebuilt N times"
 ```
 
 ## ⚙️ Configuration
@@ -286,8 +258,8 @@ await LayerXDebugger.initialize(
     maskKeys: ['ssn', 'cardNumber'],
     maxStoredLogs: 500,
     edgeSwipeZone: LayerXEdgeZone.right,
-    autoInject: true,            // auto-register the GetX services
-    isLayerXArchitecture: null,  // null = auto (assume LayerX); false = skip
+    autoInject: true,
+    isLayerXArchitecture: null, // null = auto (assume LayerX); false = skip injection
     onCrash: (e, s, fatal) {/* forward */},
   ),
 );
@@ -299,26 +271,15 @@ await LayerXDebugger.initialize(
 | `staging` | info+ | ✅ | ✅ |
 | `prod` | warning+ | ❌ | ❌ |
 
-## 🐛 In-App Viewer
+## 🏛 Architecture
 
-The viewer (opened from the floating button, an edge swipe, or
-`LayerXDebugSettingsButton`) provides:
-
-- a searchable, filterable, color-coded log list with a session-health banner;
-- a rich detail screen with request/response payloads, JSON syntax highlighting
-  and a **field-level API response diff**;
-- a **"Who owns this bug?"** blame analysis (app vs backend vs network);
-- a suggested-fix card and a step-by-step journey timeline;
-- one-tap export of all logs to the clipboard.
-
-## 📸 Screenshots
-
-> Screenshots and a demo GIF live in [`doc/`](doc/). _(Add `doc/viewer.png`,
-> `doc/detail.png` and `doc/demo.gif` to showcase the viewer on pub.dev.)_
+LayerX Debugger is itself a showcase of **LayerX architecture** — the source is organised into
+`config/`, `services/`, `repository/`, `mvvm/`, `core/` and `widgets/` under `lib/src/`, while
+`lib/layerx_debugger.dart` stays the single public import.
 
 ## 📖 Example
 
-A complete GetX example lives in [`example/`](example/). Run it with:
+A full GetX example lives in [`example/`](example/):
 
 ```bash
 cd example && flutter pub get && flutter run
@@ -326,8 +287,7 @@ cd example && flutter pub get && flutter run
 
 ## 🤝 Contributing
 
-Issues and PRs are welcome at
-<https://github.com/the-bughex-code/layerx_debugger>.
+Issues and PRs welcome at <https://github.com/the-bughex-code/layerx_debugger>.
 
 ## 📄 License
 

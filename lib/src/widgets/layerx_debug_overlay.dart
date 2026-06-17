@@ -1,8 +1,8 @@
 import 'package:flutter/widgets.dart';
 
-import '../core/layerx_debugger.dart';
-import 'lx_edge_trigger.dart';
-import 'lx_fab_trigger.dart';
+import 'package:layerx_debugger/src/core/layerx_debugger_initializer.dart';
+import 'package:layerx_debugger/src/widgets/lx_edge_trigger.dart';
+import 'package:layerx_debugger/src/widgets/lx_fab_trigger.dart';
 
 /// Hosts the in-app LayerX log viewer above your application.
 ///

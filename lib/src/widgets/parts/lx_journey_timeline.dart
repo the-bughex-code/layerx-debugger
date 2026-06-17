@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../models/layerx_journey_step.dart';
+import 'package:layerx_debugger/src/mvvm/model/layerx_journey_step.dart';
 
 class LxJourneyTimeline extends StatelessWidget {
   final List<LayerXJourneyStep> journey;
