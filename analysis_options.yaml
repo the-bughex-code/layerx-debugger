@@ -1,0 +1,18 @@
+# Static analysis configuration for layerx_debugger.
+#
+# Builds on the official Flutter lint set and additionally enforces public API
+# documentation so the package keeps a complete dartdoc surface.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - "doc/**"
+    - "example/**"
+
+linter:
+  rules:
+    # Every exported member must be documented.
+    public_member_api_docs: true
+    # Keep intra-package imports relative and quoting consistent.
+    prefer_relative_imports: true
+    prefer_single_quotes: true
