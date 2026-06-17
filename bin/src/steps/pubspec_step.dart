@@ -31,7 +31,6 @@ class PubspecStep {
     }
 
     // Inject after the `dependencies:` block opening line.
-    // We look for `dependencies:` and insert right after it.
     const marker = 'dependencies:';
     final depIndex = content.indexOf(marker);
     if (depIndex == -1) {
@@ -41,15 +40,14 @@ class PubspecStep {
       exit(1);
     }
 
-    // Insert after the `dependencies:` line.
     final insertAt = depIndex + marker.length;
     content =
         '${content.substring(0, insertAt)}\n'
-        '  layerx_debugger: ^1.0.0'
+        '  layerx_debugger: ^1.0.2'
         '${content.substring(insertAt)}';
 
     pubspecFile.writeAsStringSync(content);
-    CliPrinter.success('layerx_debugger ^1.0.0 added to pubspec.yaml');
+    CliPrinter.success('layerx_debugger ^1.0.2 added to pubspec.yaml');
 
     // Run flutter pub get.
     CliPrinter.step('Running flutter pub get ...');

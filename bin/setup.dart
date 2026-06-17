@@ -4,7 +4,8 @@
 ///   dart run layerx_debugger:setup
 ///
 /// What it does:
-///   1. Adds layerx_debugger to pubspec.yaml and runs `flutter pub get`
+///   0. Scans for LayerX architecture — aborts with guidance if not found
+///   1. Adds layerx_debugger + layerx_generator to pubspec and runs flutter pub get
 ///   2. Wraps lib/main.dart with LayerXDebugger.runZonedGuarded + initialize
 ///   3. Injects LayerXDebugOverlay builder into MaterialApp / GetMaterialApp
 library;
@@ -12,6 +13,7 @@ library;
 import 'dart:io';
 
 import 'src/steps/app_widget_step.dart';
+import 'src/steps/layerx_detector_step.dart';
 import 'src/steps/main_dart_step.dart';
 import 'src/steps/pubspec_step.dart';
 import 'src/utils/cli_printer.dart';
@@ -50,6 +52,17 @@ Future<void> main(List<String> args) async {
 
   CliPrinter.info('Detected app name: $appName');
   CliPrinter.divider();
+
+  // ── Step 0: LayerX Architecture Detection ─────────────────────────────────
+  // Abort early if the project is not following LayerX pattern.
+  final detector = LayerXDetectorStep(projectRoot);
+  final detectionResult = detector.run();
+  final shouldContinue = detector.printAndDecide(detectionResult);
+  CliPrinter.divider();
+
+  if (!shouldContinue) {
+    exit(0); // graceful exit — user needs to set up LayerX first
+  }
 
   // ── Step 1: pubspec.yaml ───────────────────────────────────────────────────
   final pubspecDone = await PubspecStep(projectRoot).run();

@@ -5,7 +5,22 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.0.3
+
+### Added
+
+- **LayerX Architecture detector in `dart run layerx_debugger:setup`** — the CLI now
+  scans `lib/` for LayerX signals (`LayerXController`, `LayerXService`, `LayerXDebugMixin`,
+  `GetMaterialApp`, `GetPage`) before running any setup steps. If no LayerX pattern is
+  detected, setup is aborted with a clear, color-coded terminal message directing the user
+  to adopt the LayerX Architecture first using
+  [`layerx_generator`](https://pub.dev/packages/layerx_generator). Nothing is written to
+  the project in this case — the tool is fully non-destructive on abort.
+
+---
+
 ## 1.0.2
+
 
 ### Fixed
 
