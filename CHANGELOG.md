@@ -1,40 +1,46 @@
 # Changelog
 
-All notable changes to `layerx_debugger` are documented in this file.
+All notable changes to **layerx_debugger** are documented here.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
+project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## 1.0.0
 
-Initial release.
+🎉 **First release — in-app debugging for Flutter.**
+
+A complete, zero-boilerplate debugging ecosystem that lives *inside* your running app:
+one `LayerXDebugger.initialize()` call wires up logging, network capture, crash handling,
+GetX integration and a full in-app log viewer.
 
 ### Added
 
-- **Logging** — `LayerXLog` facade with `d`, `i`, `w`, `e`, `s` (success), `v`, `wtf`,
-  a structured `log(...)` API, and an `apiError(...)` shorthand.
-- **Pretty console output** — box-style (`┌─ │ └`) rendering with ANSI colors
-  (blue/green/yellow/red/grey), automatically disabled in release/production.
-- **One-call setup & detection** — `LayerXDebugger.initialize({config})` applies config,
-  installs crash handling, and (in a LayerX/GetX app) auto-registers the LayerX GetX
-  services with duplicate-prevention and a double-initialization guard. Best-effort
-  architecture detection prints a banner and activates modules incrementally.
+- **In-app viewer** — draggable floating button, edge-swipe and `LayerXDebugSettingsButton`,
+  plus `LayerXDebugger.openViewer(context)` to open it from any button. Searchable, filterable,
+  color-coded log list with a session-health banner and a rich detail screen.
+- **"Who owns this bug?" blame engine** — attributes each failure to app / backend / network
+  with a QA-ready note, a suggested fix, and a step-by-step journey timeline.
+- **API response diffing** — detects when a backend changes its JSON shape and renders a
+  field-level diff (added / removed / type-changed / value-changed).
+- **Logging** — `LayerXLog.d/i/w/e/s` (+ `v`, `wtf`), `LayerXLog.screen()`, `LayerXLog.action()`,
+  structured `log(...)`, `apiError(...)`, and `Object.logD()/logE()/...` extensions. Colored,
+  emoji-tagged console output with boxed `┌─ │ └` API blocks; auto-disabled in production.
+- **One-call setup & detection** — applies config, installs crash handling, and (in a
+  LayerX/GetX app) auto-registers the LayerX GetX services with duplicate-prevention and a
+  double-initialization guard. Best-effort architecture detection activates modules
+  incrementally and prints a status banner.
 - **Auto-injected GetX services** — `LayerXLoggerService`, `LayerXDebugService`,
   `LayerXCrashService`, `LayerXNetworkService`, `LayerXPerformanceService`,
   `LayerXRouteService` (via `LayerXBindings`).
-- **Configuration** — `LayerXDebugConfig` toggles for API, route, crash, GetX, performance
-  and widget logs; sensitive-key masking; `LayerXEnvironment` (dev/staging/prod) verbosity;
-  `autoInject` and `isLayerXArchitecture` controls.
-- **Network capture** — `http` is the primary integration via `LayerXHttp`
-  (`get/post/put/patch/delete`) and the shared `LayerXNetworkLogger`. Dio is supported
-  optionally via a documented interceptor recipe — **no forced dio dependency**. Sensitive
-  fields are masked (`********`).
-- **Navigation** — `LayerXRouteObserver` (Navigator) and `LayerXRouteMiddleware` (GetX).
-- **Crash handling** — global `FlutterError`, `PlatformDispatcher` and zone capture, with
-  an `onCrash` hook for optional Firebase Crashlytics / Sentry forwarding.
-- **GetX** — `LayerXController`, `LayerXService` and `LayerXDebugMixin` with lifecycle logs.
-- **Screen & action logging** — `LayerXLog.screen()` and `LayerXLog.action()`.
-- **Performance** — `LayerXProfiler` with `start/end/measure(name, fn)`.
-- **Widgets** — `LayerXDebugWidget` rebuild counter and the in-app `LayerXDebugOverlay`
-  log viewer (draggable FAB, edge swipe, searchable list and rich detail screen with
-  blame/solution analysis, journey timeline and API response diffing).
+- **Networking** — `http` is the primary integration via `LayerXHttp`
+  (`get/post/put/patch/delete`) and the shared `LayerXNetworkLogger`; sensitive fields are
+  masked (`********`). Dio is supported optionally via a documented interceptor recipe —
+  **no forced `dio` dependency**.
+- **Crash handling** — global `FlutterError`, `PlatformDispatcher` and zone capture, with an
+  `onCrash` hook for optional Firebase Crashlytics / Sentry forwarding.
+- **GetX** — `LayerXController`, `LayerXService`, `LayerXDebugMixin`, and
+  `LayerXRouteMiddleware`; `LayerXRouteObserver` for `navigatorObservers`.
+- **Performance & widgets** — `LayerXProfiler.start/end/measure(name, fn)` and the
+  `LayerXDebugWidget(tag:)` rebuild counter.
+- **Configuration** — `LayerXDebugConfig` with per-feature toggles, sensitive-key masking,
+  `LayerXEnvironment` (dev/staging/prod) verbosity, `autoInject` and `isLayerXArchitecture`.
