@@ -13,11 +13,14 @@ library;
 
 import 'dart:io';
 
+import 'src/integration/integration_scanner.dart';
 import 'src/steps/app_widget_step.dart';
+import 'src/steps/http_bind_step.dart';
 import 'src/steps/layerx_detector_step.dart';
+import 'src/steps/logger_bind_step.dart';
 import 'src/steps/main_dart_step.dart';
 import 'src/steps/pubspec_step.dart';
-import 'src/steps/service_logger_http_step.dart';
+import 'src/steps/verify_step.dart';
 import 'src/utils/cli_printer.dart';
 
 Future<void> main(List<String> args) async {
@@ -78,8 +81,24 @@ Future<void> main(List<String> args) async {
   final appWidgetFile = AppWidgetStep(projectRoot).run();
   CliPrinter.divider();
 
-  // ── Step 4: Bind Logger & Http services ────────────────────────────────────
-  final servicesBound = ServiceLoggerHttpStep(projectRoot).run();
+  // ── Step 4: Scan integration targets (content-based) ──────────────────────
+  final targets = IntegrationScanner(projectRoot).scan();
+
+  // ── Step 5: Bind logger (aborts if missing) ────────────────────────────────
+  LoggerBindStep(targets.logger).run();
+  CliPrinter.divider();
+
+  // ── Step 6: Bind HTTP layer (graceful skip if missing) ─────────────────────
+  final servicesBound = HttpBindStep(targets).run();
+  CliPrinter.divider();
+
+  // ── Step 7: Verify (format touched files + analyze, report only) ───────────
+  final touched = <String>[
+    if (targets.logger.found) targets.logger.filePath!,
+    if (targets.dio.found) targets.dio.filePath!,
+    if (targets.httpWrap.found) targets.httpWrap.filePath!,
+  ];
+  await VerifyStep(projectRoot, touched).run();
   CliPrinter.divider();
 
   // ── Summary ────────────────────────────────────────────────────────────────

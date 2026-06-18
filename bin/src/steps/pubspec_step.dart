@@ -40,14 +40,15 @@ class PubspecStep {
       exit(1);
     }
 
+    final version = _resolvePackageVersion();
     final insertAt = depIndex + marker.length;
     content =
         '${content.substring(0, insertAt)}\n'
-        '  layerx_debugger: ^1.0.2'
+        '  layerx_debugger: ^$version'
         '${content.substring(insertAt)}';
 
     pubspecFile.writeAsStringSync(content);
-    CliPrinter.success('layerx_debugger ^1.0.2 added to pubspec.yaml');
+    CliPrinter.success('layerx_debugger ^$version added to pubspec.yaml');
 
     // Run flutter pub get.
     CliPrinter.step('Running flutter pub get ...');
@@ -63,5 +64,27 @@ class PubspecStep {
     }
     CliPrinter.success('flutter pub get succeeded');
     return true;
+  }
+
+  /// Resolves the layerx_debugger version from the package's own pubspec.yaml,
+  /// which ships alongside this CLI. Falls back to a known version if not found.
+  String _resolvePackageVersion() {
+    try {
+      final scriptPath = Platform.script.toFilePath();
+      var dir = File(scriptPath).parent;
+      for (var i = 0; i < 6; i++) {
+        final p = File('${dir.path}/pubspec.yaml');
+        if (p.existsSync()) {
+          final text = p.readAsStringSync();
+          if (text.contains('name: layerx_debugger')) {
+            final m = RegExp(r'^version:\s*(.+)$', multiLine: true)
+                .firstMatch(text);
+            if (m != null) return m.group(1)!.trim();
+          }
+        }
+        dir = dir.parent;
+      }
+    } catch (_) {}
+    return '1.0.6';
   }
 }

@@ -1,5 +1,5 @@
-/// Typed result of scanning a LayerX project for the services the setup CLI
-/// must bind to: the logger, a Dio client, and/or an `http`-based wrapper.
+// Typed result of scanning a LayerX project for the services the setup CLI
+// must bind to: the logger, a Dio client, and/or an `http`-based wrapper.
 
 class LoggerTarget {
   final bool found;
