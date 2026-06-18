@@ -43,7 +43,7 @@ abstract final class LxKit {
     if (code == null) return LxTheme.textDim;
     if (code >= 500) return LxTheme.accentRed;
     if (code >= 400) return LxTheme.accentOrange;
-    if (code >= 300) return LxTheme.accentBlue;
+    if (code >= 300) return LxTheme.accent;
     return LxTheme.accentGreen;
   }
 

@@ -78,7 +78,7 @@ class _LxConsolePaneState extends State<LxConsolePane> {
             Expanded(
               child: TextField(
                 style: LxTheme.mono.copyWith(fontSize: 12),
-                cursorColor: LxTheme.accentBlue,
+                cursorColor: LxTheme.accent,
                 decoration: InputDecoration(
                   isCollapsed: true,
                   hintText: 'search logs…',

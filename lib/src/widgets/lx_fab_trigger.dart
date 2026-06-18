@@ -112,7 +112,7 @@ class _LxFabTriggerState extends State<LxFabTrigger>
             final totalCount = logs.length;
             final hasErrors = errorCount > 0;
             final badgeCount = hasErrors ? errorCount : totalCount;
-            final accentColor = hasErrors ? LxTheme.accentRed : LxTheme.accentBlue;
+            final accentColor = hasErrors ? LxTheme.accentRed : LxTheme.accent;
 
             return GestureDetector(
               onPanStart: (_) => setState(() => _isDragging = true),
@@ -257,7 +257,7 @@ class _LxFabTriggerState extends State<LxFabTrigger>
               _menuTile(
                 ctx,
                 icon: Icons.terminal_outlined,
-                color: LxTheme.accentBlue,
+                color: LxTheme.accent,
                 label: 'View Logs',
                 onTap: () { Navigator.pop(ctx); _openLogs(context); },
               ),

@@ -28,6 +28,12 @@ abstract final class LxTheme {
   static const accentCyan = Color(0xFF39D353);
   static const accentOrange = Color(0xFFF0883E);
 
+  // ── Brand accent ───────────────────────────────────────────────────────────
+  // The primary brand color of the redesigned viewer: cyan, paired with white
+  // (textPrimary / accentInk) for active states.
+  static const accent = Color(0xFF22D3EE);
+  static const accentInk = Color(0xFFF5FAFC);
+
   // ── Glow helpers ───────────────────────────────────────────────────────────
   static List<BoxShadow> glowShadow(Color color, {double spread = 6}) => [
         BoxShadow(

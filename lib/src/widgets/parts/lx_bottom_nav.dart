@@ -46,14 +46,24 @@ class LxBottomNav extends StatelessWidget {
 
   Widget _item(LxNavItem item, int i) {
     final active = index == i;
-    final color = active ? LxTheme.accentBlue : LxTheme.textSecondary;
+    // Cyan + white active treatment: white icon/label over a cyan indicator.
+    final color = active ? LxTheme.accentInk : LxTheme.textSecondary;
     return InkWell(
       onTap: () => onSelect(i),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.only(top: 8, bottom: 10),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Container(
+              width: 22,
+              height: 2,
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                color: active ? LxTheme.accent : Colors.transparent,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
             Stack(
               clipBehavior: Clip.none,
               children: [

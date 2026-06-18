@@ -274,7 +274,7 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
         final step = e.journey[i];
         final last = i == e.journey.length - 1;
         final color =
-            step.type == 'error' ? LxTheme.accentRed : LxTheme.accentBlue;
+            step.type == 'error' ? LxTheme.accentRed : LxTheme.accent;
         return IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,

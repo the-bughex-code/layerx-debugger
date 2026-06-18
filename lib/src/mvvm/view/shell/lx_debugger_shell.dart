@@ -83,7 +83,7 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
               items: [
                 const LxNavItem(Icons.dashboard_outlined, 'Dashboard'),
                 LxNavItem(Icons.swap_vert, 'Network',
-                    badge: networkCount, badgeColor: LxTheme.accentBlue),
+                    badge: networkCount, badgeColor: LxTheme.accent),
                 LxNavItem(Icons.terminal, 'Console',
                     badge: errors, badgeColor: LxTheme.accentRed),
                 const LxNavItem(Icons.travel_explore, 'Inspector'),

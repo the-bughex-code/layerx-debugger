@@ -173,7 +173,7 @@ class LxDashboardPane extends StatelessWidget {
     final cells = [
       _Metric('REQUESTS', '$requests', LxTheme.textPrimary),
       _Metric('ERRORS', '$errors', errors > 0 ? LxTheme.accentRed : LxTheme.textPrimary),
-      _Metric('AVG LATENCY', avgLatency == 0 ? '—' : '${avgLatency}ms', LxTheme.accentBlue),
+      _Metric('AVG LATENCY', avgLatency == 0 ? '—' : 'ms', LxTheme.accent),
       _Metric('SCHEMA Δ', '$schema', schema > 0 ? LxTheme.accentOrange : LxTheme.textPrimary),
     ];
     return GridView.count(
