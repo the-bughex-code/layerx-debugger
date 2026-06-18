@@ -76,6 +76,14 @@ class LayerXNetworkLogger {
 
       String? errorCode;
       String? backendMessage;
+      // Contract check: a 2xx whose Content-Type claims JSON but whose body
+      // fails to parse is a serialization / "unexpected response structure"
+      // problem the status code alone would hide.
+      final looksJson = responseHeaders?.entries.any((e) =>
+              e.key.toLowerCase() == 'content-type' &&
+              e.value.toLowerCase().contains('json')) ??
+          false;
+      bool jsonParseFailed = false;
       try {
         final decoded = json.decode(rawBody);
         if (decoded is Map) {
@@ -86,13 +94,22 @@ class LayerXNetworkLogger {
               decoded['msg']?.toString() ??
               decoded['error']?.toString();
         }
-      } catch (_) {}
+      } catch (_) {
+        if (!isError && looksJson && rawBody.trim().isNotEmpty) {
+          jsonParseFailed = true;
+        }
+      }
 
       final shortEndpoint = _shortPath(endpoint);
-      final message = isError
+      final baseMessage = isError
           ? '$method $shortEndpoint → $statusCode'
               '${backendMessage != null ? '\n$backendMessage' : ''}'
           : '$method $shortEndpoint → $statusCode (${durationMs}ms)';
+      final message = jsonParseFailed
+          ? '$baseMessage\n⚠ Unexpected response structure — body is not valid JSON'
+          : baseMessage;
+
+      final effectiveLevel = jsonParseFailed ? LayerXLogLevel.warning : level;
 
       final source = isServerError
           ? LayerXLogSource.server
@@ -100,15 +117,21 @@ class LayerXNetworkLogger {
               ? LayerXLogSource.backend
               : LayerXLogSource.network;
 
-      final solution =
-          isError ? LayerXSolutionEngine.getSuggestion(message, null) : null;
+      final solution = isError
+          ? LayerXSolutionEngine.getSuggestion(message, null)
+          : jsonParseFailed
+              ? 'The server returned a 2xx with a JSON content-type but the body '
+                  'could not be parsed. Verify the endpoint is not returning HTML '
+                  '(e.g. an error page) or a truncated/invalid payload before '
+                  'mapping it to your model.'
+              : null;
 
       _printBox(
         method: method,
         shortEndpoint: shortEndpoint,
         statusCode: statusCode,
         durationMs: durationMs,
-        level: level,
+        level: effectiveLevel,
         requestHeaders: requestHeaders == null
             ? null
             : LayerXMasker.maskHeaders(requestHeaders, extraKeys: maskKeys),
@@ -153,7 +176,7 @@ class LayerXNetworkLogger {
         id: now.microsecondsSinceEpoch.toString(),
         dedupKey: dedupKey,
         timestamp: now,
-        level: level,
+        level: effectiveLevel,
         source: source,
         message: message,
         methodName: method,
