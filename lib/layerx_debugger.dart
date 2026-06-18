@@ -43,6 +43,7 @@ export 'package:layerx_debugger/src/services/debug/layerx_debug_service.dart';
 export 'package:layerx_debugger/src/services/logger/layerx_logger_service.dart';
 export 'package:layerx_debugger/src/services/network/layerx_network_service.dart';
 export 'package:layerx_debugger/src/services/performance/layerx_performance_service.dart';
+export 'package:layerx_debugger/src/services/performance/layerx_frame_monitor.dart';
 export 'package:layerx_debugger/src/services/route/layerx_route_service.dart';
 
 // ── Widgets ──────────────────────────────────────────────────────────────────

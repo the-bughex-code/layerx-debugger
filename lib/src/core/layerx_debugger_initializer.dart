@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_debugger_shell.dart';
 import 'package:layerx_debugger/src/services/crash/layerx_crash_handler.dart';
+import 'package:layerx_debugger/src/services/performance/layerx_frame_monitor.dart';
 import 'package:layerx_debugger/src/services/logger/layerx_console_logger.dart';
 import 'package:layerx_debugger/src/services/logger/layerx_log.dart';
 import 'package:layerx_debugger/src/config/enums/layerx_log_level.dart';
@@ -66,6 +67,10 @@ class LayerXDebugger {
     try {
       if (_config.enableCrashLogs) {
         LayerXCrashHandler.install();
+      }
+
+      if (_config.enablePerformanceLogs) {
+        LayerXFrameMonitor.install();
       }
 
       final report = LayerXArchitectureDetector.detect(_config);
@@ -169,5 +174,6 @@ class LayerXDebugger {
     _config = const LayerXDebugConfig();
     _routeObserver = null;
     LayerXArchitectureDetector.reset();
+    LayerXFrameMonitor.reset();
   }
 }
