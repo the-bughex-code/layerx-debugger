@@ -1,3 +1,16 @@
+# A .pubignore replaces .gitignore for publishing, so re-list build artifacts
+# and developer-only files here to keep them out of the published archive.
+
 # Development-only design documents (specs & implementation plans).
-# Kept in the repository but excluded from the published package.
 docs/
+
+# Build output and tooling caches.
+build/
+.dart_tool/
+.idea/
+.github/
+.vscode/
+
+# OS / editor cruft and local backups.
+.DS_Store
+*.bak
