@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
 import 'package:layerx_debugger/src/repository/layerx_log_store.dart';
-import 'package:layerx_debugger/src/mvvm/view/lx_log_list_screen.dart';
+import 'package:layerx_debugger/src/mvvm/view/shell/lx_debugger_shell.dart';
 
 /// A ready-made list tile that opens the LayerX log viewer.
 ///
@@ -36,7 +36,7 @@ class LayerXDebugSettingsButton extends StatelessWidget {
           onTap: () {
             Navigator.of(context).push(
               MaterialPageRoute<void>(
-                builder: (context) => const LxLogListScreen(),
+                builder: (context) => const LxDebuggerShell(),
               ),
             );
           },

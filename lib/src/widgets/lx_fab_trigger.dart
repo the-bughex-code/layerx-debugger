@@ -4,7 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
 import 'package:layerx_debugger/src/repository/layerx_log_store.dart';
-import 'package:layerx_debugger/src/mvvm/view/lx_log_list_screen.dart';
+import 'package:layerx_debugger/src/mvvm/view/shell/lx_debugger_shell.dart';
 import 'package:layerx_debugger/src/config/lx_theme.dart';
 import 'package:layerx_debugger/src/core/layerx_debugger_initializer.dart';
 
@@ -59,7 +59,7 @@ class _LxFabTriggerState extends State<LxFabTrigger>
     if (nav != null) {
       nav.push(
         PageRouteBuilder<void>(
-          pageBuilder: (_, animation, __) => const LxLogListScreen(),
+          pageBuilder: (_, animation, __) => const LxDebuggerShell(),
           transitionsBuilder: (_, animation, __, child) {
             return SlideTransition(
               position: Tween<Offset>(
@@ -76,7 +76,7 @@ class _LxFabTriggerState extends State<LxFabTrigger>
       try {
         Navigator.of(context, rootNavigator: true).push(
           PageRouteBuilder<void>(
-            pageBuilder: (_, animation, __) => const LxLogListScreen(),
+            pageBuilder: (_, animation, __) => const LxDebuggerShell(),
             transitionsBuilder: (_, animation, __, child) {
               return SlideTransition(
                 position: Tween<Offset>(

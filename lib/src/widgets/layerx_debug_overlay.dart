@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'package:layerx_debugger/src/core/layerx_debugger_initializer.dart';
+import 'package:layerx_debugger/src/core/layerx_viewer_state.dart';
 import 'package:layerx_debugger/src/widgets/lx_edge_trigger.dart';
 import 'package:layerx_debugger/src/widgets/lx_fab_trigger.dart';
 
@@ -30,12 +31,20 @@ class LayerXDebugOverlay extends StatelessWidget {
     final config = LayerXDebugger.config;
     if (!config.viewerEnabled) return child;
 
-    return Stack(
-      children: [
-        child,
-        if (config.enableEdgeSwipe) const LxEdgeTrigger(),
-        if (config.enableFloatingButton) const LxFabTrigger(),
-      ],
+    // While the debugger shell is open, hide the triggers entirely. This
+    // prevents duplicate FABs, overlay conflicts, and visibility bugs, and
+    // restores them automatically when the viewer is dismissed.
+    return ValueListenableBuilder<bool>(
+      valueListenable: LayerXViewerState.isOpen,
+      builder: (context, viewerOpen, _) {
+        return Stack(
+          children: [
+            child,
+            if (!viewerOpen && config.enableEdgeSwipe) const LxEdgeTrigger(),
+            if (!viewerOpen && config.enableFloatingButton) const LxFabTrigger(),
+          ],
+        );
+      },
     );
   }
 }
