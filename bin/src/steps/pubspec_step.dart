@@ -85,6 +85,6 @@ class PubspecStep {
         dir = dir.parent;
       }
     } catch (_) {}
-    return '1.0.6';
+    return '1.1.0';
   }
 }

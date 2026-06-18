@@ -241,6 +241,65 @@ class LayerXNetworkLogger {
     );
   }
 
+  /// Records a client-side **model mapping / deserialization failure** for an
+  /// otherwise-successful response.
+  ///
+  /// Call this from your `fromJson`/parsing layer when decoding a response into
+  /// a model throws. LayerX surfaces it as a "Model mapping failed" warning with
+  /// the offending [responseBody], so a schema change the HTTP status code hid
+  /// becomes visible:
+  ///
+  /// ```dart
+  /// try {
+  ///   user = User.fromJson(jsonDecode(res.body));
+  /// } catch (e, st) {
+  ///   LayerXNetworkLogger.recordParsingError(
+  ///     endpoint: url, method: 'GET', error: e, stackTrace: st,
+  ///     responseBody: res.body, modelName: 'User',
+  ///   );
+  ///   rethrow;
+  /// }
+  /// ```
+  static void recordParsingError({
+    required String endpoint,
+    required String method,
+    required Object error,
+    StackTrace? stackTrace,
+    String? responseBody,
+    String? modelName,
+  }) {
+    final config = LayerXDebugger.config;
+    if (!config.enableApiLogs) return;
+    if (_skipEndpoints.any(endpoint.contains)) return;
+    LayerXArchitectureDetector.markNetwork();
+
+    final shortEndpoint = _shortPath(endpoint);
+    final target = modelName == null ? '' : ' → $modelName';
+    final message = 'Model mapping failed: $method $shortEndpoint$target';
+
+    LayerXConsolePrinter.printBox(
+      title: '$method $shortEndpoint',
+      lines: ['Model mapping failed', error.toString()],
+      level: LayerXLogLevel.warning,
+      colors: config.resolvedUseColors,
+    );
+
+    LayerXLogOutput.ingest(
+      level: LayerXLogLevel.warning,
+      message: message,
+      endpoint: endpoint,
+      method: method,
+      service: 'Parsing',
+      responsePayload: responseBody == null
+          ? null
+          : LayerXMasker.maskJsonString(_clip(responseBody),
+              extraKeys: config.maskKeys),
+      error: error,
+      stackTrace: stackTrace,
+      packageName: config.packageName,
+    );
+  }
+
   static void _printBox({
     required String method,
     required String shortEndpoint,

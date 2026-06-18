@@ -5,6 +5,47 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.1.0
+
+### Added
+
+- **Redesigned in-app debugger UI** — A completely new bottom-navigation experience
+  with four destinations: **Dashboard** (session health score, live metric cards,
+  latency sparkline, recent issues), **Network** (request rows with method/status/
+  latency and `All / Errors / Slow / Δ Changed` filters), **Console** (all-source
+  timeline with source filters + search), and **Inspector** (overview, response,
+  request, and trace tabs, schema-diff and suggested-fix). Cyan + white brand accent.
+- **Floating button visibility control** — The FAB and edge-swipe trigger now hide
+  automatically while the debugger is open and restore on exit, preventing duplicate
+  buttons and overlay conflicts.
+- **Automatic frame-drop (jank) capture** — `LayerXFrameMonitor` records slow frames
+  as performance warnings (rate-limited), installed automatically when performance
+  logging is enabled.
+- **Smarter API response handling** — A `2xx` response whose `Content-Type` claims
+  JSON but whose body fails to parse is now flagged as a contract violation
+  ("Unexpected response structure") instead of passing silently as success.
+- **`LayerXNetworkLogger.recordParsingError(...)`** — A helper to report client-side
+  model-mapping / deserialization failures so they surface as warnings with the
+  offending response body.
+- **Opt-in Dio integration** — `LayerXDioInterceptor`, available via
+  `package:layerx_debugger/dio.dart`, forwards Dio responses and errors to LayerX.
+
+### Changed
+
+- **Rebuilt setup CLI** — Content-based detection of the logger/HTTP services
+  (renamed classes are still found), idempotent marker-block injection, automatic
+  Dio interceptor wiring, a guided snippet fallback for unrecognized HTTP wrappers,
+  graceful skip when no HTTP service exists, a clear abort when no logger exists, and
+  a post-run `dart format` + `flutter analyze` report. The injected dependency
+  version is now resolved from the package itself.
+
+### Removed
+
+- Legacy internal viewer screens (`LxLogListScreen`, `LxLogDetailScreen`) and their
+  now-unused part widgets, superseded by the new shell.
+
+---
+
 ## 1.0.6
 
 ### Added
