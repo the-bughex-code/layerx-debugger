@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:layerx_debugger/layerx_debugger.dart';
-import 'package:layerx_debugger/src/utils/layerx_json_diff.dart';
-import 'package:layerx_debugger/src/utils/layerx_solution_engine.dart';
-import 'package:layerx_debugger/src/utils/layerx_source_detector.dart';
+import 'package:layerx_debugger/src/config/utils/layerx_json_diff.dart';
+import 'package:layerx_debugger/src/config/utils/layerx_solution_engine.dart';
+import 'package:layerx_debugger/src/config/utils/layerx_source_detector.dart';
 
 void main() {
   group('LayerXSourceDetector', () {

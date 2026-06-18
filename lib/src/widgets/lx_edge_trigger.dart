@@ -2,17 +2,15 @@
 // ignore_for_file: public_member_api_docs
 import 'package:flutter/material.dart';
 
-import '../core/layerx_debug_config.dart';
-import '../core/layerx_debugger.dart';
-import 'screens/lx_log_list_screen.dart';
+import 'package:layerx_debugger/src/config/layerx_debug_config.dart';
+import 'package:layerx_debugger/src/config/lx_theme.dart';
+import 'package:layerx_debugger/src/core/layerx_debugger_initializer.dart';
 
 class LxEdgeTrigger extends StatelessWidget {
   const LxEdgeTrigger({super.key});
 
   void _open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const LxLogListScreen()),
-    );
+    LayerXDebugger.openViewer(context);
   }
 
   @override
@@ -55,9 +53,12 @@ class LxEdgeTrigger extends StatelessWidget {
                 ? Alignment.centerLeft
                 : (isRight ? Alignment.centerRight : Alignment.bottomCenter),
             child: Container(
-              width: isBottom ? double.infinity : 2.0,
-              height: isBottom ? 2.0 : double.infinity,
-              color: Colors.blueGrey.withValues(alpha: 0.3),
+              width: isBottom ? double.infinity : 1.5,
+              height: isBottom ? 1.5 : double.infinity,
+              decoration: BoxDecoration(
+                color: LxTheme.accentBlue.withValues(alpha: 0.3),
+                boxShadow: LxTheme.glowShadow(LxTheme.accentBlue, spread: 2),
+              ),
             ),
           ),
         ),

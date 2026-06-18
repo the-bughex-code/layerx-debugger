@@ -1,11 +1,11 @@
 import 'package:get/get.dart';
 
-import '../../services/layerx_crash_service.dart';
-import '../../services/layerx_debug_service.dart';
-import '../../services/layerx_logger_service.dart';
-import '../../services/layerx_network_service.dart';
-import '../../services/layerx_performance_service.dart';
-import '../../services/layerx_route_service.dart';
+import 'package:layerx_debugger/src/services/crash/layerx_crash_service.dart';
+import 'package:layerx_debugger/src/services/debug/layerx_debug_service.dart';
+import 'package:layerx_debugger/src/services/logger/layerx_logger_service.dart';
+import 'package:layerx_debugger/src/services/network/layerx_network_service.dart';
+import 'package:layerx_debugger/src/services/performance/layerx_performance_service.dart';
+import 'package:layerx_debugger/src/services/route/layerx_route_service.dart';
 
 /// Registers the LayerX GetX services as permanent singletons.
 ///

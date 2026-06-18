@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:layerx_debugger/layerx_debugger.dart';
-import 'package:layerx_debugger/src/logger/layerx_console_printer.dart';
+import 'package:layerx_debugger/src/config/utils/layerx_console_printer.dart';
 
 void main() {
   setUp(() async {

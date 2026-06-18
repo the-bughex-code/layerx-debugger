@@ -1,8 +1,8 @@
 import 'package:flutter/widgets.dart';
 
-import '../core/layerx_debugger.dart';
-import '../logger/layerx_log.dart';
-import '../models/layerx_log_level.dart';
+import 'package:layerx_debugger/src/core/layerx_debugger_initializer.dart';
+import 'package:layerx_debugger/src/services/logger/layerx_log.dart';
+import 'package:layerx_debugger/src/config/enums/layerx_log_level.dart';
 
 /// Wraps a widget and logs how many times it rebuilds.
 ///

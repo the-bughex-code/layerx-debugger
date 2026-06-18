@@ -95,6 +95,12 @@ class HomePage extends StatelessWidget {
           _button(
               'Increment counter (watch rebuild logs)', controller.increment),
           const Divider(height: 32),
+          // Open the in-app log viewer from a custom button.
+          _button(
+            '📋 Open log viewer',
+            () => LayerXDebugger.openViewer(context),
+          ),
+          // Or drop in the ready-made settings tile.
           const LayerXDebugSettingsButton(),
         ],
       ),
