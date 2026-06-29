@@ -20,6 +20,35 @@ class Net {
       expect(bindDio(once), isNull);
     });
     test('null when no Dio()', () => expect(bindDio('class X {}'), isNull));
+
+    test('uses a cascade for a class-level field initializer (valid Dart)', () {
+      const fieldSrc = '''
+class Net {
+  static final Dio _dio = Dio();
+}
+''';
+      final out = bindDio(fieldSrc)!;
+      // Must extend the initializer with a cascade, not append a bare
+      // statement into the class body (which is invalid Dart).
+      expect(out, contains('Dio()..interceptors.add(LayerXDioInterceptor())'));
+      // No stray statement form: `_dio.interceptors.add(...);` floating in the
+      // class body would be a parser error.
+      expect(out, isNot(contains('_dio.interceptors.add')));
+    });
+
+    test('cascades onto a Dio with constructor args', () {
+      const s = '''
+class Net {
+  final dio = Dio(BaseOptions(baseUrl: 'https://x'));
+}
+''';
+      final out = bindDio(s)!;
+      expect(
+        out,
+        contains(
+            "Dio(BaseOptions(baseUrl: 'https://x'))..interceptors.add(LayerXDioInterceptor())"),
+      );
+    });
   });
 
   group('bindHttpLegacy', () {

@@ -5,6 +5,21 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.2.1
+
+### Fixed
+
+- **Setup no longer produces invalid Dart when binding a class-level Dio
+  field.** The auto-setup CLI used to append a separate
+  `dio.interceptors.add(LayerXDioInterceptor());` statement after the matched
+  `Dio(...)` initializer. That is only valid inside a function/constructor body;
+  when the client is a plain field — e.g. `static final Dio _dio = Dio();` — the
+  statement landed in the class body, where bare statements are illegal,
+  triggering parser errors (`missing_method_parameters`, `expected_class_member`,
+  …). The interceptor is now attached with a cascade on the constructor itself
+  (`Dio()..interceptors.add(LayerXDioInterceptor())`), which is valid both in a
+  field initializer and inside a function body.
+
 ## 1.2.0
 
 ### Changed
