@@ -53,7 +53,7 @@ class _LxConsolePaneState extends State<LxConsolePane> {
               : ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                   itemCount: rows.length,
-                  itemBuilder: (_, i) => _logRow(rows[i]),
+                  itemBuilder: (_, i) => LxKit.stagger(i, _logRow(rows[i])),
                 ),
         ),
       ],

@@ -46,4 +46,45 @@ class HttpsCalls {
     test('null when no legacy call',
         () => expect(bindHttpLegacy('class X {}'), isNull));
   });
+
+  group('bindHttpClient', () {
+    const ioClientSrc = '''
+import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart';
+
+class HttpsCalls {
+  late final IOClient _client = IOClient(
+    HttpClient()..connectionTimeout = const Duration(seconds: 30),
+  );
+}
+''';
+
+    test('wraps the IOClient field with LayerXHttpClient', () {
+      final out = bindHttpClient(ioClientSrc)!;
+      expect(out, contains('LayerXHttpClient(IOClient('));
+      // The field type is widened so the wrapped client type-checks.
+      expect(out, contains('http.Client _client ='));
+      expect(out, isNot(contains('IOClient _client')));
+      expect(out, contains('package:layerx_debugger/layerx_debugger.dart'));
+      // Parentheses stay balanced (one extra close added before the `;`).
+      expect('('.allMatches(out).length, ')'.allMatches(out).length);
+    });
+
+    test('is idempotent', () {
+      final once = bindHttpClient(ioClientSrc)!;
+      expect(bindHttpClient(once), isNull);
+    });
+
+    test('wraps a plain http.Client() too', () {
+      const s = '''
+import 'package:http/http.dart' as http;
+class Api { final http.Client _c = http.Client(); }
+''';
+      final out = bindHttpClient(s)!;
+      expect(out, contains('LayerXHttpClient(http.Client())'));
+    });
+
+    test('null when no client construction is present',
+        () => expect(bindHttpClient('class X {}'), isNull));
+  });
 }

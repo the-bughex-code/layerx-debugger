@@ -230,6 +230,27 @@ await LayerXHttp.post(uri, headers: headers, body: jsonBody);
 // get / post / put / patch / delete supported.
 ```
 
+### Already have your own `http.Client`? Wrap it — one line
+
+If your app sends every request through its own client (a custom `IOClient`,
+a `RetryClient`, or a generated `HttpsCalls` service), you don't have to rewrite
+your call sites. Wrap that **one** client with `LayerXHttpClient` and every
+request — including multipart — is captured automatically:
+
+```dart
+// before
+late final http.Client _client = IOClient(HttpClient()..connectionTimeout = ...);
+
+// after — every endpoint is now logged, nothing else changes
+late final http.Client _client =
+    LayerXHttpClient(IOClient(HttpClient()..connectionTimeout = ...));
+```
+
+`LayerXHttpClient` is a transparent `http.BaseClient` decorator: it never alters
+your request and always returns an intact response. Because `Client.get/post/
+put/patch/delete` and `MultipartRequest.send` all funnel through `send`, wrapping
+the single client captures your whole API surface with zero per-call setup.
+
 ### Dio (optional — never forced)
 
 LayerX has **no dependency on `dio`**. If your app uses Dio, add a tiny interceptor that

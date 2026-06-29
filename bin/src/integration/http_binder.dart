@@ -63,6 +63,62 @@ String? bindHttpLegacy(String source) {
   return out;
 }
 
+final _clientCtorRe = RegExp(r'(=\s*)(IOClient|http\.Client|Client)(\s*\()');
+
+/// Finds the index of the `)` that closes the `(` at [open].
+int _matchParen(String s, int open) {
+  var depth = 0;
+  for (var i = open; i < s.length; i++) {
+    final c = s[i];
+    if (c == '(') {
+      depth++;
+    } else if (c == ')') {
+      depth--;
+      if (depth == 0) return i;
+    }
+  }
+  return -1;
+}
+
+/// Wraps the host app's underlying `http.Client`/`IOClient` field with
+/// `LayerXHttpClient`, so every request the app makes through it is captured.
+///
+/// This is the robust, generic way to enable in-app API logs: because
+/// `Client.get/post/put/patch/delete` and `MultipartRequest.send` all funnel
+/// through `send`, wrapping the single client captures the whole API surface —
+/// no per-call-site instrumentation, and it works whether or not the file has
+/// any legacy interceptor calls. Returns null when no client construction is
+/// found or it is already wrapped.
+String? bindHttpClient(String source) {
+  if (source.contains('LayerXHttpClient')) return null;
+  final m = _clientCtorRe.firstMatch(source);
+  if (m == null) return null;
+
+  final openParen = m.end - 1; // index of the constructor's '('
+  final close = _matchParen(source, openParen);
+  if (close == -1) return null;
+
+  final ctorNameStart = m.start + m.group(1)!.length; // start of the ctor name
+
+  // Insert the extra closing paren first (higher index) so the earlier insert's
+  // offset stays valid.
+  var out = source.replaceRange(close + 1, close + 1, ')');
+  out = out.replaceRange(ctorNameStart, ctorNameStart, 'LayerXHttpClient(');
+
+  // Widen an explicit `IOClient`/`Client` field type to `http.Client` so the
+  // wrapped client (a LayerXHttpClient) type-checks. Uses a mapped replace —
+  // `String.replaceFirst` does not substitute `$1` capture references.
+  out = out.replaceFirstMapped(
+    RegExp(r'((?:late\s+)?final\s+)(?:IOClient|Client)(\s+\w+\s*=\s*LayerXHttpClient)'),
+    (m) => '${m[1]}http.Client${m[2]}',
+  );
+
+  if (!out.contains(_debuggerImport)) {
+    out = MarkerBlock.upsertImports(out, [_debuggerImport]);
+  }
+  return out;
+}
+
 /// The copy-paste snippet shown when http auto-injection isn't possible.
 const httpGuidedSnippet = '''
 LayerXNetworkLogger.record(

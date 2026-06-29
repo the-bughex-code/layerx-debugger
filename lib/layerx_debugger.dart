@@ -72,6 +72,7 @@ export 'package:layerx_debugger/src/services/route/layerx_route_observer.dart';
 
 // ── Network ──────────────────────────────────────────────────────────────────
 export 'package:layerx_debugger/src/services/network/layerx_http.dart';
+export 'package:layerx_debugger/src/services/network/layerx_http_client.dart';
 export 'package:layerx_debugger/src/config/utils/layerx_masker.dart';
 export 'package:layerx_debugger/src/services/network/layerx_network_logger.dart';
 export 'package:layerx_debugger/src/services/logger/layerx_log_interceptor_output.dart';

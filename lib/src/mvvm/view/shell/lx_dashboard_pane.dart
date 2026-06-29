@@ -77,7 +77,7 @@ class LxDashboardPane extends StatelessWidget {
             ),
           )
         else
-          ...issues.map(_issueRow),
+          ...issues.asMap().entries.map((e) => LxKit.stagger(e.key, _issueRow(e.value))),
       ],
     );
   }
@@ -176,14 +176,27 @@ class LxDashboardPane extends StatelessWidget {
       _Metric('AVG LATENCY', avgLatency == 0 ? '—' : 'ms', LxTheme.accent),
       _Metric('SCHEMA Δ', '$schema', schema > 0 ? LxTheme.accentOrange : LxTheme.textPrimary),
     ];
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      childAspectRatio: 2.6,
-      children: cells.map(_metricCard).toList(),
+    // Content-sized rows (not a fixed-aspect grid) so the cards never overflow
+    // on narrow screens.
+    // IntrinsicHeight gives the Row a bounded height (so `stretch` makes both
+    // cards equal height) without forcing an infinite constraint inside the
+    // surrounding ListView.
+    Widget row(_Metric a, _Metric b) => IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: _metricCard(a)),
+              const SizedBox(width: 10),
+              Expanded(child: _metricCard(b)),
+            ],
+          ),
+        );
+    return Column(
+      children: [
+        row(cells[0], cells[1]),
+        const SizedBox(height: 10),
+        row(cells[2], cells[3]),
+      ],
     );
   }
 
@@ -197,18 +210,21 @@ class LxDashboardPane extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(m.label, style: LxTheme.monoSm),
+          Text(m.label,
+              style: LxTheme.monoSm, maxLines: 1, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 4),
           Text(
             m.value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: m.color,
               fontSize: 22,
               fontWeight: FontWeight.w800,
               fontFamily: 'monospace',
-              height: 1,
+              height: 1.1,
             ),
           ),
         ],

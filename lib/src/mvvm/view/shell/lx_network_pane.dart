@@ -67,7 +67,7 @@ class _LxNetworkPaneState extends State<LxNetworkPane> {
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                   itemCount: rows.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (_, i) => _requestRow(rows[i]),
+                  itemBuilder: (_, i) => LxKit.stagger(i, _requestRow(rows[i])),
                 ),
         ),
       ],
@@ -134,16 +134,21 @@ class _LxNetworkPaneState extends State<LxNetworkPane> {
       );
     }
 
+    // Horizontally scrollable so the filter row never overflows on a narrow
+    // screen (or mid-transition).
     return Container(
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.fromLTRB(16, 0, 8, 10),
-      child: Row(
-        children: [
-          chip('All', _NetFilter.all),
-          chip('Errors', _NetFilter.errors),
-          chip('Slow', _NetFilter.slow),
-          chip('Δ Changed', _NetFilter.changed),
-        ],
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            chip('All', _NetFilter.all),
+            chip('Errors', _NetFilter.errors),
+            chip('Slow', _NetFilter.slow),
+            chip('Δ Changed', _NetFilter.changed),
+          ],
+        ),
       ),
     );
   }

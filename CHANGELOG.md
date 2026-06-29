@@ -5,6 +5,39 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.2.0
+
+### Changed
+
+- **Brand-new "Neo Terminal" viewer UI.** The in-app debugger was fully
+  restyled: a pure-black devtools console with a neon-green/cyan accent and
+  monospace-forward type, a terminal command-bar header with a live log count
+  and a blinking cursor, an animated bottom nav whose indicator slides to the
+  active destination, fade-through page transitions, and staggered entrance
+  animations on every list. Audited for zero overflow down to a 320px-wide
+  screen (covered by a new widget test that taps through every destination,
+  including mid-transition). Fixes a latent crash where issue/problem rows with
+  a colored left rail threw `A borderRadius can only be given on borders with
+  uniform colors` when painted.
+
+### Added
+
+- **`LayerXHttpClient` — generic capture for apps with their own HTTP client.**
+  A transparent `http.BaseClient` decorator that wraps **any** inner client
+  (a custom `IOClient`, a `RetryClient`, or the default `http.Client()`) and
+  logs every request/response/error with no per-call setup. Apps that route all
+  traffic through a single client — for example a `layerx_generator`-generated
+  `HttpsCalls` service — now get full API capture by changing one line:
+  `IOClient(...)` → `LayerXHttpClient(IOClient(...))`. Multipart requests are
+  captured too, the request is never altered, and the caller always receives an
+  intact response.
+- **Auto-setup now wires API capture for you.** `dart run layerx_debugger:setup`
+  detects the app's HTTP service and wraps its underlying `IOClient`/`http.Client`
+  with `LayerXHttpClient` in a single robust edit (paren-balanced, type-widened,
+  idempotent), instead of the previous fragile per-call-site rewrite that failed
+  on large generated clients. This is why in-app API logs could be missing even
+  when the console showed them — the capture hook was never applied; now it is.
+
 ## 1.1.0
 
 ### Added

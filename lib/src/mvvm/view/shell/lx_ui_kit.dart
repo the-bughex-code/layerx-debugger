@@ -104,16 +104,40 @@ abstract final class LxKit {
   }
 
   /// A card with a colored left rail — used for issue/problem rows.
+  ///
+  /// Corners are square: Flutter forbids a [borderRadius] on a [Border] whose
+  /// sides have non-uniform colors (the rail differs from the other sides), and
+  /// crisp left-accent rows suit the Neo Terminal look anyway.
   static BoxDecoration railCard(Color rail) => BoxDecoration(
         color: LxTheme.surface,
         border: Border(
           left: BorderSide(color: rail, width: 3),
-          top: BorderSide(color: LxTheme.border),
-          right: BorderSide(color: LxTheme.border),
-          bottom: BorderSide(color: LxTheme.border),
+          top: const BorderSide(color: LxTheme.border),
+          right: const BorderSide(color: LxTheme.border),
+          bottom: const BorderSide(color: LxTheme.border),
         ),
-        borderRadius: const BorderRadius.horizontal(right: Radius.circular(12)),
       );
+
+  /// Wraps [child] in a staggered fade + slide-up entrance animation, used by
+  /// the list panes. The delay grows with [index] but is capped so long lists
+  /// stay snappy and never feel laggy.
+  static Widget stagger(int index, Widget child) {
+    final delayMs = (index * 28).clamp(0, 240);
+    return TweenAnimationBuilder<double>(
+      key: ValueKey('lx_stagger_$index'),
+      tween: Tween(begin: 0, end: 1),
+      duration: Duration(milliseconds: 320 + delayMs),
+      curve: Curves.easeOutCubic,
+      builder: (context, t, c) => Opacity(
+        opacity: t.clamp(0, 1),
+        child: Transform.translate(
+          offset: Offset(0, (1 - t) * 10),
+          child: c,
+        ),
+      ),
+      child: child,
+    );
+  }
 
   static Widget emptyState(IconData icon, String title, String subtitle) {
     return Center(

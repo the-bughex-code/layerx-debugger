@@ -68,10 +68,13 @@ void main() {
     LayerXLog.i('hello viewer');
 
     await tester.pumpWidget(const MaterialApp(home: LxDebuggerShell()));
-    await tester.pumpAndSettle();
+    // The header's blinking cursor repeats forever, so pumpAndSettle would
+    // never return — advance time with a fixed pump instead.
+    await tester.pump(const Duration(milliseconds: 400));
 
-    await tester.tap(find.text('Console'));
-    await tester.pumpAndSettle();
+    // Nav labels are rendered lower-cased in the Neo Terminal design.
+    await tester.tap(find.text('console'));
+    await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.textContaining('hello viewer'), findsWidgets);
   });

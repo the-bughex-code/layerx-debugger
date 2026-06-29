@@ -28,15 +28,31 @@ class HttpBindStep {
           changed;
     }
     if (targets.httpWrap.found) {
-      final applied = _patch(
-        targets.httpWrap.filePath!,
-        bindHttpLegacy,
-        '${targets.httpWrap.className} bound with LayerXNetworkLogger.',
+      final path = targets.httpWrap.filePath!;
+      final cls = targets.httpWrap.className;
+
+      // Prefer wrapping the underlying client with LayerXHttpClient — one
+      // robust edit that captures the whole API surface. Only fall back to
+      // rewriting legacy per-call interceptor hooks when there's no client to
+      // wrap, so the same request is never logged twice.
+      var applied = _patch(
+        path,
+        bindHttpClient,
+        '$cls now routes through LayerXHttpClient — every request is captured.',
       );
       if (!applied) {
+        applied = _patch(
+          path,
+          bindHttpLegacy,
+          '$cls legacy interceptor calls bound to LayerXNetworkLogger.',
+        );
+      }
+      if (!applied) {
         CliPrinter.warning(
-          'Could not auto-inject into ${targets.httpWrap.className}. '
-          'Add this at your response site:\n$httpGuidedSnippet',
+          'Could not auto-inject into $cls. '
+          'Wrap your http client once:\n'
+          '  final client = LayerXHttpClient(yourExistingClient);\n'
+          'or add this at your response site:\n$httpGuidedSnippet',
         );
       }
       changed = applied || changed;
