@@ -5,6 +5,16 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.4.0
+
+### Added
+
+- **Viewer overhaul (Phase 2).** The in-app log viewer gains: filter by
+  **category** and by **level** in the Console, **pause / resume** of live logs
+  from the header, a **per-row copy** action, and — in the Inspector — the log's
+  **category** and **source `file:line`** plus a **collapsible stack trace**.
+  Internal UI only; no API changes.
+
 ## 1.3.0
 
 ### Added
