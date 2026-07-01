@@ -3,6 +3,7 @@ import 'package:layerx_debugger/src/config/enums/layerx_log_level.dart';
 import 'package:layerx_debugger/src/services/logger/layerx_console_logger.dart';
 import 'package:layerx_debugger/src/config/utils/layerx_console_printer.dart';
 import 'package:layerx_debugger/src/services/logger/layerx_log_output.dart';
+import 'package:layerx_debugger/src/config/enums/layerx_log_category.dart';
 
 /// The primary logging entry point for LayerX.
 ///
@@ -80,6 +81,7 @@ class LayerXLog {
   static void log({
     required LayerXLogLevel level,
     required String message,
+    LayerXLogCategory? category,
     String? screen,
     String? controller,
     String? service,
@@ -97,6 +99,7 @@ class LayerXLog {
     _emit(
       level,
       message,
+      category: category,
       screen: screen,
       method: method,
       controller: controller,
@@ -144,6 +147,7 @@ class LayerXLog {
   static void _emit(
     LayerXLogLevel level,
     String message, {
+    LayerXLogCategory? category,
     String? screen,
     String? method,
     String? controller,
@@ -166,6 +170,7 @@ class LayerXLog {
     LayerXLogOutput.ingest(
       level: level,
       message: message,
+      category: category,
       screen: screen,
       method: method,
       controller: controller,

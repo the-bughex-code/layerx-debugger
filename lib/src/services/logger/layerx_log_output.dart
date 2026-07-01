@@ -7,6 +7,8 @@ import 'package:layerx_debugger/src/config/utils/layerx_duplicate_guard.dart';
 import 'package:layerx_debugger/src/repository/layerx_log_store.dart';
 import 'package:layerx_debugger/src/config/utils/layerx_solution_engine.dart';
 import 'package:layerx_debugger/src/config/utils/layerx_source_detector.dart';
+import 'package:layerx_debugger/src/config/enums/layerx_log_category.dart';
+import 'package:layerx_debugger/src/config/utils/layerx_stack_location.dart';
 
 /// Builds structured [LayerXLogEntry] records and writes them to the
 /// [LayerXLogStore].
@@ -22,6 +24,7 @@ class LayerXLogOutput {
   static void ingest({
     required LayerXLogLevel level,
     required String message,
+    LayerXLogCategory? category,
     String? screen,
     String? method,
     String? controller,
@@ -57,6 +60,15 @@ class LayerXLogOutput {
         message: combined,
         stackTrace: stackStr,
       );
+
+      final location = LayerXStackLocation.parse(
+        (stackTrace ?? StackTrace.current).toString(),
+        packageName: packageName,
+      );
+      final resolvedCategory = category ??
+          (endpoint != null
+              ? LayerXLogCategory.api
+              : LayerXLogCategory.app);
 
       String? solution;
       if (level == LayerXLogLevel.error || level == LayerXLogLevel.fatal) {
@@ -97,6 +109,9 @@ class LayerXLogOutput {
         timestamp: now,
         level: level,
         source: source,
+        category: resolvedCategory,
+        sourceFile: location.file,
+        sourceLine: location.line,
         message: message,
         screenName: resolvedScreen,
         methodName: resolvedMethod,
