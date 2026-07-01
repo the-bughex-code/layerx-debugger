@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import 'package:layerx_debugger/src/config/enums/layerx_log_level.dart';
+import 'package:layerx_debugger/src/services/logger/layerx_console_capture.dart';
 
 /// Renders LayerX console output: colored level lines and the boxed
 /// (`┌─ │ └`) format used for HTTP request/response/error logs.
@@ -71,7 +72,8 @@ class LayerXConsolePrinter {
     String message, {
     required bool colors,
   }) {
-    debugPrint(formatLine(level, message, colors: colors));
+    LayerXConsoleCapture.guard(
+        () => debugPrint(formatLine(level, message, colors: colors)));
   }
 
   /// Prints a [box] to the console via [debugPrint].
@@ -87,7 +89,7 @@ class LayerXConsolePrinter {
       level: level,
       colors: colors,
     )) {
-      debugPrint(line);
+      LayerXConsoleCapture.guard(() => debugPrint(line));
     }
   }
 

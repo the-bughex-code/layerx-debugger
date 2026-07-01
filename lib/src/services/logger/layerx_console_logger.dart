@@ -2,6 +2,7 @@ import 'package:logger/logger.dart';
 
 import 'package:layerx_debugger/src/core/layerx_debugger_initializer.dart';
 import 'package:layerx_debugger/src/config/enums/layerx_log_level.dart';
+import 'package:layerx_debugger/src/services/logger/layerx_console_capture.dart';
 
 /// A [LogPrinter] that wraps the `logger` package's [PrettyPrinter] and
 /// prefixes each line with a compact timestamp and level tag.
@@ -96,25 +97,31 @@ class LayerXConsoleLogger {
 
   /// Logs at trace/verbose level.
   static void t(dynamic message, {Object? error, StackTrace? stackTrace}) =>
-      instance.t(message, error: error, stackTrace: stackTrace);
+      LayerXConsoleCapture.guard(
+          () => instance.t(message, error: error, stackTrace: stackTrace));
 
   /// Logs at debug level.
   static void d(dynamic message, {Object? error, StackTrace? stackTrace}) =>
-      instance.d(message, error: error, stackTrace: stackTrace);
+      LayerXConsoleCapture.guard(
+          () => instance.d(message, error: error, stackTrace: stackTrace));
 
   /// Logs at info level.
   static void i(dynamic message, {Object? error, StackTrace? stackTrace}) =>
-      instance.i(message, error: error, stackTrace: stackTrace);
+      LayerXConsoleCapture.guard(
+          () => instance.i(message, error: error, stackTrace: stackTrace));
 
   /// Logs at warning level.
   static void w(dynamic message, {Object? error, StackTrace? stackTrace}) =>
-      instance.w(message, error: error, stackTrace: stackTrace);
+      LayerXConsoleCapture.guard(
+          () => instance.w(message, error: error, stackTrace: stackTrace));
 
   /// Logs at error level.
   static void e(dynamic message, {Object? error, StackTrace? stackTrace}) =>
-      instance.e(message, error: error, stackTrace: stackTrace);
+      LayerXConsoleCapture.guard(
+          () => instance.e(message, error: error, stackTrace: stackTrace));
 
   /// Logs at fatal level.
   static void f(dynamic message, {Object? error, StackTrace? stackTrace}) =>
-      instance.f(message, error: error, stackTrace: stackTrace);
+      LayerXConsoleCapture.guard(
+          () => instance.f(message, error: error, stackTrace: stackTrace));
 }
