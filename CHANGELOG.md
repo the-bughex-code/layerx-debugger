@@ -5,6 +5,24 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.2.2
+
+### Fixed
+
+- **Setup no longer crashes on Windows during the verify step.** `dart format`
+  and `flutter analyze` were launched with `Process.run` without a shell; on
+  Windows those tools are `.bat` shims, so the run threw an unhandled
+  `ProcessException` ("The system cannot find the file specified") and aborted
+  setup right at the end. Both commands now run with `runInShell: true` and are
+  wrapped so a launch failure degrades to a warning instead of crashing.
+- **Setup no longer injects a duplicate `builder:` into `MaterialApp` /
+  `GetMaterialApp`.** When the app already declared its own `builder:` (or
+  `navigatorObservers:`), the CLI still added a second one — a duplicate named
+  argument that fails to compile. Each parameter is now injected only when the
+  app doesn't already declare it at the top level of the constructor. When an
+  existing `builder:` is found, it is left untouched and the CLI prints how to
+  wrap its child with `LayerXDebugOverlay` manually.
+
 ## 1.2.1
 
 ### Fixed

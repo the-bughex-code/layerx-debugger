@@ -12,19 +12,37 @@ class VerifyStep {
   Future<void> run() async {
     CliPrinter.step('Verifying changes ...');
     final existing = touchedFiles.where((p) => File(p).existsSync()).toList();
+
+    // `runInShell` is required on Windows: `dart`/`flutter` are `.bat` shims
+    // that `Process.run` cannot launch directly (it throws a ProcessException,
+    // "The system cannot find the file specified"). Both calls are also
+    // guarded so a failure in this final, best-effort step never aborts an
+    // otherwise-successful setup.
     if (existing.isNotEmpty) {
-      await Process.run('dart', ['format', ...existing],
-          workingDirectory: projectRoot);
-      CliPrinter.success('Formatted ${existing.length} file(s).');
+      try {
+        await Process.run('dart', ['format', ...existing],
+            workingDirectory: projectRoot, runInShell: true);
+        CliPrinter.success('Formatted ${existing.length} file(s).');
+      } catch (e) {
+        CliPrinter.warning('Could not format touched files ($e). Skipped.');
+      }
     }
-    final analyze = await Process.run('flutter', ['analyze'],
-        workingDirectory: projectRoot);
-    if (analyze.exitCode == 0) {
-      CliPrinter.success('flutter analyze passed — no issues.');
-    } else {
+
+    try {
+      final analyze = await Process.run('flutter', ['analyze'],
+          workingDirectory: projectRoot, runInShell: true);
+      if (analyze.exitCode == 0) {
+        CliPrinter.success('flutter analyze passed — no issues.');
+      } else {
+        CliPrinter.warning(
+          'flutter analyze reported issues (setup still completed). Review:\n'
+          '${analyze.stdout}',
+        );
+      }
+    } catch (e) {
       CliPrinter.warning(
-        'flutter analyze reported issues (setup still completed). Review:\n'
-        '${analyze.stdout}',
+        'Skipped `flutter analyze` — could not launch flutter ($e). '
+        'Setup still completed; run `flutter analyze` yourself to check.',
       );
     }
   }

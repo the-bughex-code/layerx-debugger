@@ -1,6 +1,6 @@
 name: layerx_debugger
 description: "Drop-in debugger and logger for Flutter and GetX: pretty console logs, Dio/http capture, crash handling, route, widget and performance tracking, plus an in-app log viewer."
-version: 1.2.1
+version: 1.2.2
 repository: https://github.com/the-bughex-code/layerx_debugger
 homepage: https://github.com/the-bughex-code/layerx_debugger
 issue_tracker: https://github.com/the-bughex-code/layerx_debugger/issues
