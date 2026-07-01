@@ -23,6 +23,7 @@ export 'package:layerx_debugger/src/mvvm/model/layerx_journey_step.dart';
 export 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
 export 'package:layerx_debugger/src/config/enums/layerx_log_level.dart';
 export 'package:layerx_debugger/src/config/enums/layerx_log_source.dart';
+export 'package:layerx_debugger/src/config/enums/layerx_log_category.dart';
 export 'package:layerx_debugger/src/mvvm/model/layerx_schema_change.dart';
 
 // ── Utilities & engines ──────────────────────────────────────────────────────
