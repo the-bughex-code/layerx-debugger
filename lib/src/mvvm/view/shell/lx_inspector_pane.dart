@@ -19,11 +19,15 @@ class LxInspectorPane extends StatefulWidget {
 
 class _LxInspectorPaneState extends State<LxInspectorPane> {
   int _tab = 0;
+  bool _stackOpen = false;
 
   @override
   void didUpdateWidget(covariant LxInspectorPane old) {
     super.didUpdateWidget(old);
-    if (old.log?.id != widget.log?.id) _tab = 0;
+    if (old.log?.id != widget.log?.id) {
+      _tab = 0;
+      _stackOpen = false;
+    }
   }
 
   @override
@@ -176,7 +180,10 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
         LxKit.sectionLabel('DETAILS'),
         _kv('Message', e.message),
         _kv('Source', e.source.name),
+        _kv('Category', e.category.label),
         _kv('Level', e.level.label),
+        if (e.sourceFile != null)
+          _kv('Location', '${e.sourceFile}:${e.sourceLine ?? '?'}'),
         if (e.statusCode != null) _kv('Status', '${e.statusCode}'),
         if (e.errorCode != null) _kv('Error code', e.errorCode!),
         if (e.controllerName != null) _kv('Controller', e.controllerName!),
@@ -184,6 +191,10 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
         if (LxKit.durationOf(e) != null) _kv('Duration', '${LxKit.durationOf(e)}ms'),
         _kv('Time', e.timestamp.toIso8601String()),
         if (e.occurrenceCount > 1) _kv('Occurrences', '×${e.occurrenceCount}'),
+        if (e.stackTrace != null) ...[
+          const SizedBox(height: 14),
+          _stackSection(context, e.stackTrace!),
+        ],
       ],
     );
   }
@@ -230,6 +241,53 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
         ],
       ),
     );
+  }
+
+  Widget _stackSection(BuildContext context, String stack) {
+    return Container(
+      decoration: BoxDecoration(
+        color: LxTheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: LxTheme.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () => setState(() => _stackOpen = !_stackOpen),
+            child: Padding(
+              padding: const EdgeInsets.all(13),
+              child: Row(
+                children: [
+                  Icon(_stackOpen ? Icons.expand_more : Icons.chevron_right,
+                      size: 18, color: LxTheme.textSecondary),
+                  const SizedBox(width: 8),
+                  Text('STACK TRACE', style: LxTheme.sectionLabel),
+                  const Spacer(),
+                  if (_stackOpen)
+                    GestureDetector(
+                      onTap: () => _copy(context, stack, 'Stack trace copied ✓'),
+                      child: const Icon(Icons.copy,
+                          size: 14, color: LxTheme.textSecondary),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          if (_stackOpen)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(13, 0, 13, 13),
+              child: SelectableText(stack,
+                  style: LxTheme.mono.copyWith(fontSize: 11, height: 1.5)),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _copy(BuildContext context, String text, String toast) {
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(LxTheme.snackBar(toast));
   }
 
   Widget _payload(String label, String? body) {
