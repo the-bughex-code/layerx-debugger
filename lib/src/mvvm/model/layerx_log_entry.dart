@@ -1,4 +1,5 @@
 import 'package:layerx_debugger/src/mvvm/model/layerx_journey_step.dart';
+import 'package:layerx_debugger/src/config/enums/layerx_log_category.dart';
 import 'package:layerx_debugger/src/config/enums/layerx_log_level.dart';
 import 'package:layerx_debugger/src/config/enums/layerx_log_source.dart';
 import 'package:layerx_debugger/src/mvvm/model/layerx_schema_change.dart';
@@ -23,6 +24,16 @@ class LayerXLogEntry {
 
   /// The most likely origin of the entry.
   final LayerXLogSource source;
+
+  /// The functional section this entry belongs to (Debug Console, UI
+  /// Exceptions, Navigation, …). Defaults to [LayerXLogCategory.app].
+  final LayerXLogCategory category;
+
+  /// The source file the entry originated from, when parseable from the stack.
+  final String? sourceFile;
+
+  /// The 1-based line number in [sourceFile], when parseable.
+  final int? sourceLine;
 
   /// The primary, human-readable message.
   final String message;
@@ -91,6 +102,9 @@ class LayerXLogEntry {
     required this.timestamp,
     required this.level,
     required this.source,
+    this.category = LayerXLogCategory.app,
+    this.sourceFile,
+    this.sourceLine,
     required this.message,
     this.screenName,
     this.methodName,
@@ -121,6 +135,9 @@ class LayerXLogEntry {
     DateTime? timestamp,
     LayerXLogLevel? level,
     LayerXLogSource? source,
+    LayerXLogCategory? category,
+    String? sourceFile,
+    int? sourceLine,
     String? message,
     String? screenName,
     String? methodName,
@@ -148,6 +165,9 @@ class LayerXLogEntry {
       timestamp: timestamp ?? this.timestamp,
       level: level ?? this.level,
       source: source ?? this.source,
+      category: category ?? this.category,
+      sourceFile: sourceFile ?? this.sourceFile,
+      sourceLine: sourceLine ?? this.sourceLine,
       message: message ?? this.message,
       screenName: screenName ?? this.screenName,
       methodName: methodName ?? this.methodName,
