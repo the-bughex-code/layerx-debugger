@@ -4,6 +4,7 @@ import 'package:layerx_debugger/src/core/layerx_debugger_initializer.dart';
 import 'package:layerx_debugger/src/config/utils/layerx_console_printer.dart';
 import 'package:layerx_debugger/src/mvvm/model/layerx_journey_step.dart';
 import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
+import 'package:layerx_debugger/src/config/enums/layerx_log_category.dart';
 import 'package:layerx_debugger/src/config/enums/layerx_log_level.dart';
 import 'package:layerx_debugger/src/config/enums/layerx_log_source.dart';
 import 'package:layerx_debugger/src/config/utils/layerx_duplicate_guard.dart';
@@ -57,6 +58,7 @@ class LayerXRouteObserver extends NavigatorObserver {
       timestamp: now,
       level: LayerXLogLevel.info,
       source: LayerXLogSource.app,
+      category: LayerXLogCategory.navigation,
       message: message,
       screenName: name,
       methodName: action,

@@ -6,6 +6,7 @@ import 'package:layerx_debugger/src/config/utils/layerx_console_printer.dart';
 import 'package:layerx_debugger/src/services/logger/layerx_log_output.dart';
 import 'package:layerx_debugger/src/mvvm/model/layerx_journey_step.dart';
 import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
+import 'package:layerx_debugger/src/config/enums/layerx_log_category.dart';
 import 'package:layerx_debugger/src/config/enums/layerx_log_level.dart';
 import 'package:layerx_debugger/src/config/enums/layerx_log_source.dart';
 import 'package:layerx_debugger/src/config/utils/layerx_duplicate_guard.dart';
@@ -178,6 +179,7 @@ class LayerXNetworkLogger {
         timestamp: now,
         level: effectiveLevel,
         source: source,
+        category: LayerXLogCategory.api,
         message: message,
         methodName: method,
         serviceName: 'HTTP',
@@ -228,6 +230,7 @@ class LayerXNetworkLogger {
     LayerXLogOutput.ingest(
       level: LayerXLogLevel.error,
       message: message,
+      category: LayerXLogCategory.network,
       endpoint: endpoint,
       method: method,
       requestPayload: requestBody == null
@@ -287,6 +290,7 @@ class LayerXNetworkLogger {
     LayerXLogOutput.ingest(
       level: LayerXLogLevel.warning,
       message: message,
+      category: LayerXLogCategory.api,
       endpoint: endpoint,
       method: method,
       service: 'Parsing',

@@ -1,5 +1,6 @@
 import 'package:flutter/scheduler.dart';
 
+import 'package:layerx_debugger/src/config/enums/layerx_log_category.dart';
 import 'package:layerx_debugger/src/config/enums/layerx_log_level.dart';
 import 'package:layerx_debugger/src/core/layerx_debugger_initializer.dart';
 import 'package:layerx_debugger/src/services/logger/layerx_log.dart';
@@ -46,6 +47,7 @@ abstract final class LayerXFrameMonitor {
             'raster ${rasterMs.toStringAsFixed(1)}ms)',
         service: 'Performance',
         method: 'frame',
+        category: LayerXLogCategory.performance,
         extras: {'duration_ms': totalMs.round()},
       );
     }

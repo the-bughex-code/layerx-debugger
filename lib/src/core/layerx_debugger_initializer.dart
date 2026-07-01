@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_debugger_shell.dart';
 import 'package:layerx_debugger/src/services/crash/layerx_crash_handler.dart';
 import 'package:layerx_debugger/src/services/performance/layerx_frame_monitor.dart';
+import 'package:layerx_debugger/src/services/logger/layerx_console_capture.dart';
 import 'package:layerx_debugger/src/services/logger/layerx_console_logger.dart';
 import 'package:layerx_debugger/src/services/logger/layerx_log.dart';
 import 'package:layerx_debugger/src/config/enums/layerx_log_level.dart';
@@ -11,6 +13,18 @@ import 'package:layerx_debugger/src/repository/layerx_log_store.dart';
 import 'package:layerx_debugger/src/core/bindings/layerx_bindings.dart';
 import 'package:layerx_debugger/src/core/layerx_architecture_detector.dart';
 import 'package:layerx_debugger/src/config/layerx_debug_config.dart';
+
+/// Whether we're running under the Flutter test binding. Used to skip the
+/// global `debugPrint` override, which would otherwise trip
+/// `debugAssertAllFoundationVarsUnset` between widget tests. Production apps
+/// use `WidgetsFlutterBinding` (no 'Test' in the runtime type).
+bool _runningUnderFlutterTest() {
+  try {
+    return WidgetsBinding.instance.runtimeType.toString().contains('Test');
+  } catch (_) {
+    return false;
+  }
+}
 
 /// The entry point for LayerX — initialize it once and everything starts
 /// working automatically.
@@ -67,6 +81,12 @@ class LayerXDebugger {
     try {
       if (_config.enableCrashLogs) {
         LayerXCrashHandler.install();
+      }
+
+      if (!kReleaseMode &&
+          _config.enableCrashLogs &&
+          !_runningUnderFlutterTest()) {
+        LayerXConsoleCapture.install();
       }
 
       if (_config.enablePerformanceLogs) {
@@ -175,5 +195,6 @@ class LayerXDebugger {
     _routeObserver = null;
     LayerXArchitectureDetector.reset();
     LayerXFrameMonitor.reset();
+    LayerXConsoleCapture.reset();
   }
 }
