@@ -56,17 +56,20 @@ await LayerXDebugger.initialize(); // ✨ that's the whole setup
 
 ## 📸 See it in action
 
-> Add `doc/viewer.png`, `doc/detail.png` and `doc/demo.gif` to showcase the viewer here.
+The in-app **Neo Terminal** viewer captures everything — framework/UI exceptions,
+uncaught Dart errors, `print` / `debugPrint` console output and network calls —
+into one pipeline, grouped by category.
 
-| Searchable log list | Rich detail + blame | API response diff |
-|---|---|---|
-| _`doc/viewer.png`_ | _`doc/detail.png`_ | _`doc/diff.png`_ |
+| Categorized console | Network inspector | Exception detail |
+|:---:|:---:|:---:|
+| ![Categorized console log viewer](doc/console.png) | ![Network request inspector](doc/network.png) | ![Captured UI exception with stack trace and fix](doc/inspector.png) |
+| Every log tagged by category, level & source `file:line` | Status, latency & API schema-change detection | A `RenderFlex` overflow caught with stack trace + suggested fix |
 
 ## 🚀 Install
 
 ```yaml
 dependencies:
-  layerx_debugger: ^1.0.1
+  layerx_debugger: ^1.3.0
 ```
 
 ```dart
