@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:layerx_debugger/src/config/enums/layerx_log_category.dart';
+import 'package:layerx_debugger/src/config/enums/layerx_log_level.dart';
 import 'package:layerx_debugger/src/config/lx_theme.dart';
 import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_ui_kit.dart';
@@ -24,12 +25,14 @@ class LxConsolePane extends StatefulWidget {
 
 class _LxConsolePaneState extends State<LxConsolePane> {
   LayerXLogCategory? _category;
+  LayerXLogLevel? _level;
   String _query = '';
 
   @override
   Widget build(BuildContext context) {
     var rows = widget.logs.where((e) {
       if (_category != null && e.category != _category) return false;
+      if (_level != null && e.level != _level) return false;
       if (_query.isNotEmpty) {
         final q = _query.toLowerCase();
         if (!e.message.toLowerCase().contains(q) &&
@@ -63,33 +66,82 @@ class _LxConsolePaneState extends State<LxConsolePane> {
   Widget _searchField() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      child: Container(
-        height: 38,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: LxTheme.surface,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: LxTheme.border),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.search, size: 16, color: LxTheme.textDim),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextField(
-                style: LxTheme.mono.copyWith(fontSize: 12),
-                cursorColor: LxTheme.accent,
-                decoration: InputDecoration(
-                  isCollapsed: true,
-                  hintText: 'search logs…',
-                  hintStyle: LxTheme.monoSm.copyWith(color: LxTheme.textDim),
-                  border: InputBorder.none,
-                ),
-                onChanged: (v) => setState(() => _query = v),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              height: 38,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: LxTheme.surface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: LxTheme.border),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.search, size: 16, color: LxTheme.textDim),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      style: LxTheme.mono.copyWith(fontSize: 12),
+                      cursorColor: LxTheme.accent,
+                      decoration: InputDecoration(
+                        isCollapsed: true,
+                        hintText: 'search logs…',
+                        hintStyle:
+                            LxTheme.monoSm.copyWith(color: LxTheme.textDim),
+                        border: InputBorder.none,
+                      ),
+                      onChanged: (v) => setState(() => _query = v),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 8),
+          _levelMenu(),
+        ],
+      ),
+    );
+  }
+
+  Widget _levelMenu() {
+    return Container(
+      height: 38,
+      width: 42,
+      decoration: BoxDecoration(
+        color: LxTheme.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+            color: _level == null ? LxTheme.border : LxTheme.accent),
+      ),
+      child: PopupMenuButton<LayerXLogLevel?>(
+        tooltip: 'Filter by level',
+        icon: Icon(Icons.filter_list,
+            size: 18,
+            color: _level == null ? LxTheme.textSecondary : LxTheme.accent),
+        color: LxTheme.surfaceHigh,
+        onSelected: (v) => setState(() => _level = v),
+        itemBuilder: (_) => [
+          const PopupMenuItem<LayerXLogLevel?>(
+              value: null, child: Text('All levels')),
+          for (final l in LayerXLogLevel.values)
+            PopupMenuItem<LayerXLogLevel?>(
+              value: l,
+              child: Row(
+                children: [
+                  Container(
+                      width: 8,
+                      height: 8,
+                      decoration:
+                          BoxDecoration(color: l.color, shape: BoxShape.circle)),
+                  const SizedBox(width: 8),
+                  Text(l.label),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }
