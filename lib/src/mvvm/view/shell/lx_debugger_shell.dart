@@ -27,6 +27,8 @@ class LxDebuggerShell extends StatefulWidget {
 
 class _LxDebuggerShellState extends State<LxDebuggerShell> {
   int _index = 0;
+  bool _paused = false;
+  List<LayerXLogEntry>? _frozen;
 
   static const _titles = ['Dashboard', 'Network', 'Console', 'Inspector'];
 
@@ -55,17 +57,19 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
       child: ValueListenableBuilder<List<LayerXLogEntry>>(
         valueListenable: LayerXLogStore.logsNotifier,
         builder: (context, logs, _) {
-          final errors = logs
+          final displayLogs = _paused ? (_frozen ?? logs) : logs;
+          final errors = displayLogs
               .where((l) =>
                   l.level == LayerXLogLevel.error ||
                   l.level == LayerXLogLevel.fatal)
               .length;
-          final networkCount = logs.where((l) => l.endpoint != null).length;
+          final networkCount =
+              displayLogs.where((l) => l.endpoint != null).length;
 
           final panes = [
-            LxDashboardPane(logs: logs, onInspect: _inspect),
-            LxNetworkPane(logs: logs, onInspect: _inspect),
-            LxConsolePane(logs: logs, onInspect: _inspect),
+            LxDashboardPane(logs: displayLogs, onInspect: _inspect),
+            LxNetworkPane(logs: displayLogs, onInspect: _inspect),
+            LxConsolePane(logs: displayLogs, onInspect: _inspect),
             ValueListenableBuilder<LayerXLogEntry?>(
               valueListenable: LayerXViewerState.selected,
               builder: (_, sel, __) => LxInspectorPane(log: sel),
@@ -74,7 +78,7 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
 
           return Scaffold(
             backgroundColor: LxTheme.bg,
-            appBar: _appBar(context, logs.length, errors),
+            appBar: _appBar(context, displayLogs.length, errors),
             body: AnimatedSwitcher(
               duration: const Duration(milliseconds: 220),
               switchInCurve: Curves.easeOut,
@@ -185,6 +189,17 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
         ],
       ),
       actions: [
+        IconButton(
+          icon: Icon(_paused ? Icons.play_arrow : Icons.pause,
+              size: 20,
+              color: _paused ? LxTheme.accentAmber : LxTheme.textSecondary),
+          tooltip: _paused ? 'Resume live logs' : 'Pause live logs',
+          onPressed: () => setState(() {
+            _paused = !_paused;
+            _frozen =
+                _paused ? List<LayerXLogEntry>.from(LayerXLogStore.logs) : null;
+          }),
+        ),
         IconButton(
           icon: const Icon(Icons.copy_all_outlined, size: 20),
           tooltip: 'Export all',
