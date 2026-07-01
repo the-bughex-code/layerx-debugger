@@ -5,6 +5,17 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.2.3
+
+### Added
+
+- **Self-healing setup — a bad edit can no longer reach your build.** The verify
+  step now syntax-checks every file the CLI touched (via `dart format` as a
+  parse gate). If an injection left a file that no longer parses, it is
+  automatically rolled back from its `.bak` and setup tells you to wire that
+  spot manually, instead of leaving a non-compiling app. This is a general
+  backstop for the regex-based source edits, so future edge cases fail safe.
+
 ## 1.2.2
 
 ### Fixed
