@@ -80,6 +80,14 @@ abstract final class LxKit {
     return '${two(t.hour)}:${two(t.minute)}:${two(t.second)}';
   }
 
+  /// A one-line, copyable summary of an entry for the per-row copy action.
+  static String copySummary(LayerXLogEntry e) {
+    final loc =
+        e.sourceFile != null ? ' (${e.sourceFile}:${e.sourceLine ?? '?'})' : '';
+    return '[${clockTime(e.timestamp)}] [${e.level.label}] '
+        '[${e.category.label}] ${e.message}$loc';
+  }
+
   // ── Reusable widgets ─────────────────────────────────────────────────────────
   static Widget sectionLabel(String text) => Padding(
         padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),

@@ -1,6 +1,7 @@
 // Internal viewer screen — not part of the public API.
 // ignore_for_file: public_member_api_docs
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:layerx_debugger/src/config/enums/layerx_log_category.dart';
 import 'package:layerx_debugger/src/config/enums/layerx_log_level.dart';
@@ -235,6 +236,18 @@ class _LxConsolePaneState extends State<LxConsolePane> {
                   const SizedBox(height: 2),
                   Text(meta, style: LxTheme.monoSm.copyWith(color: LxTheme.textDim)),
                 ],
+              ),
+            ),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                Clipboard.setData(ClipboardData(text: LxKit.copySummary(e)));
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(LxTheme.snackBar('Log copied ✓'));
+              },
+              child: const Padding(
+                padding: EdgeInsets.only(left: 8, top: 2),
+                child: Icon(Icons.copy, size: 14, color: LxTheme.textDim),
               ),
             ),
           ],
