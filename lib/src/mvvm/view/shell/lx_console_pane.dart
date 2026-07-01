@@ -2,7 +2,7 @@
 // ignore_for_file: public_member_api_docs
 import 'package:flutter/material.dart';
 
-import 'package:layerx_debugger/src/config/enums/layerx_log_source.dart';
+import 'package:layerx_debugger/src/config/enums/layerx_log_category.dart';
 import 'package:layerx_debugger/src/config/lx_theme.dart';
 import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_ui_kit.dart';
@@ -23,13 +23,13 @@ class LxConsolePane extends StatefulWidget {
 }
 
 class _LxConsolePaneState extends State<LxConsolePane> {
-  LayerXLogSource? _source;
+  LayerXLogCategory? _category;
   String _query = '';
 
   @override
   Widget build(BuildContext context) {
     var rows = widget.logs.where((e) {
-      if (_source != null && e.source != _source) return false;
+      if (_category != null && e.category != _category) return false;
       if (_query.isNotEmpty) {
         final q = _query.toLowerCase();
         if (!e.message.toLowerCase().contains(q) &&
@@ -45,7 +45,7 @@ class _LxConsolePaneState extends State<LxConsolePane> {
     return Column(
       children: [
         _searchField(),
-        _sourceChips(),
+        _categoryChips(),
         Expanded(
           child: rows.isEmpty
               ? LxKit.emptyState(Icons.terminal, 'NO LOGS',
@@ -94,27 +94,29 @@ class _LxConsolePaneState extends State<LxConsolePane> {
     );
   }
 
-  Widget _sourceChips() {
-    Widget chip(String label, LayerXLogSource? s, Color color) {
-      final active = _source == s;
+  Widget _categoryChips() {
+    final present = <LayerXLogCategory>{for (final e in widget.logs) e.category};
+    final ordered =
+        LayerXLogCategory.values.where(present.contains).toList();
+
+    Widget chip(String label, LayerXLogCategory? c, Color color) {
+      final active = _category == c;
       return Padding(
         padding: const EdgeInsets.only(right: 8),
         child: GestureDetector(
-          onTap: () => setState(() => _source = s),
+          onTap: () => setState(() => _category = c),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: active ? color.withValues(alpha: 0.14) : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                  color: active ? color.withValues(alpha: 0.45) : Colors.transparent),
+                  color:
+                      active ? color.withValues(alpha: 0.45) : Colors.transparent),
             ),
-            child: Text(
-              label,
-              style: LxTheme.monoSm.copyWith(
-                color: active ? color : LxTheme.textSecondary,
-              ),
-            ),
+            child: Text(label,
+                style: LxTheme.monoSm.copyWith(
+                    color: active ? color : LxTheme.textSecondary)),
           ),
         ),
       );
@@ -128,10 +130,7 @@ class _LxConsolePaneState extends State<LxConsolePane> {
         scrollDirection: Axis.horizontal,
         children: [
           chip('All', null, LxTheme.textPrimary),
-          chip('Network', LayerXLogSource.network, LayerXLogSource.network.color),
-          chip('App', LayerXLogSource.app, LayerXLogSource.app.color),
-          chip('Backend', LayerXLogSource.backend, LayerXLogSource.backend.color),
-          chip('Server', LayerXLogSource.server, LayerXLogSource.server.color),
+          for (final c in ordered) chip(c.label, c, c.color),
         ],
       ),
     );
