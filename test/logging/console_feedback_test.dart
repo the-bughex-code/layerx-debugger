@@ -18,4 +18,15 @@ void main() {
         isEmpty);
     expect(logs.where((l) => l.message == 'user tapped save'), hasLength(1));
   });
+
+  test('LayerXLog.s (success) does not echo into debugConsole capture', () {
+    LayerXConsoleCapture.install();
+    LayerXLog.s('saved successfully');
+    final logs = LayerXLogStore.logs;
+    // The success line is printed via LayerXConsolePrinter -> debugPrint, which
+    // IS intercepted; the guard must stop it becoming a debugConsole entry.
+    expect(logs.where((l) => l.category == LayerXLogCategory.debugConsole),
+        isEmpty);
+    expect(logs.where((l) => l.message == 'saved successfully'), hasLength(1));
+  });
 }
