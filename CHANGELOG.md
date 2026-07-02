@@ -5,6 +5,23 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.5.0
+
+### Changed
+
+- **UX P0 (from the usability audit): safer, clearer, honest.** One-tap
+  "clear all" is gone — clearing now lives behind a confirm sheet ("Start a new
+  session") that offers **Copy report first** and an **Undo** snackbar that
+  restores everything. Every copy action shows the same confirmation
+  ("Copied — paste it into your bug report"), including the previously silent
+  Inspector Request/Response copy; exporting an empty session now says
+  "Nothing captured yet" instead of copying an empty report. The Dashboard's
+  AVG LATENCY card now shows the actual number (it previously rendered the
+  literal text "ms"). New internals: a single-issue plain-language bug-report
+  formatter (first wiring of `LayerXBlameEngine` into the product) and
+  `LayerXLogStore.openProblemCount` as the one source of truth for problem
+  badges.
+
 ## 1.4.2
 
 ### Changed

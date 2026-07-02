@@ -237,8 +237,8 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
                       .copyWith(fontSize: 16, fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
               Text(
-                "This clears all $count captured problems and can't be undone "
-                'after this snackbar disappears.',
+                "This clears all $count captured logs and can't be undone "
+                'after the Undo snackbar disappears.',
                 style: LxTheme.bodySecondary,
               ),
               const SizedBox(height: 16),
