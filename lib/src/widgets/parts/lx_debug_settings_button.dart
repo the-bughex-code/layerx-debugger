@@ -21,8 +21,7 @@ class LayerXDebugSettingsButton extends StatelessWidget {
     return ValueListenableBuilder<List<LayerXLogEntry>>(
       valueListenable: LayerXLogStore.logsNotifier,
       builder: (context, logs, _) {
-        final errorCount = LayerXLogStore.errorCount;
-        final totalCount = logs.length;
+        final problemCount = LayerXLogStore.openProblemCount;
 
         return ListTile(
           leading:
@@ -31,7 +30,7 @@ class LayerXDebugSettingsButton extends StatelessWidget {
             'LayerX Debug Logger',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          subtitle: Text('$totalCount logs • $errorCount errors'),
+          subtitle: Text('$problemCount problems'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
             Navigator.of(context).push(

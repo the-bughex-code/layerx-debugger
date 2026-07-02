@@ -119,10 +119,8 @@ class _LxFabTriggerState extends State<LxFabTrigger>
         child: ValueListenableBuilder<List<LayerXLogEntry>>(
           valueListenable: LayerXLogStore.logsNotifier,
           builder: (context, logs, _) {
-            final errorCount = LayerXLogStore.errorCount;
-            final totalCount = logs.length;
-            final hasErrors = errorCount > 0;
-            final badgeCount = hasErrors ? errorCount : totalCount;
+            final hasErrors = LayerXLogStore.errorCount > 0;
+            final badgeCount = LayerXLogStore.openProblemCount;
             final accentColor = hasErrors ? LxTheme.accentRed : LxTheme.accent;
 
             return GestureDetector(
