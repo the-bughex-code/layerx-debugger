@@ -206,8 +206,78 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
           tooltip: 'Export all',
           onPressed: () => LxCopy.copyExport(context),
         ),
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert, size: 20),
+          color: LxTheme.surfaceHigh,
+          onSelected: (v) {
+            if (v == 'new-session') _confirmNewSession(context);
+          },
+          itemBuilder: (_) => const [
+            PopupMenuItem(value: 'new-session', child: Text('Start a new session')),
+          ],
+        ),
       ],
     );
+  }
+
+  void _confirmNewSession(BuildContext context) {
+    final count = LayerXLogStore.logs.length;
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: LxTheme.surfaceAlt,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Start a new session?',
+                  style: LxTheme.bodyPrimary
+                      .copyWith(fontSize: 16, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 8),
+              Text(
+                "This clears all $count captured problems and can't be undone "
+                'after this snackbar disappears.',
+                style: LxTheme.bodySecondary,
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  LxCopy.copyExport(context);
+                },
+                child: const Text('Copy report first'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  _clearWithUndo(context);
+                },
+                child: const Text('Clear'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _clearWithUndo(BuildContext context) {
+    final snapshot = List<LayerXLogEntry>.from(LayerXLogStore.logs);
+    LayerXLogStore.clear();
+    LayerXViewerState.selected.value = null;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: const Text('Session cleared'),
+        duration: const Duration(seconds: 6),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () => LayerXLogStore.restore(snapshot),
+        ),
+      ));
   }
 }
 

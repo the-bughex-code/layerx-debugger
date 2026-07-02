@@ -104,6 +104,11 @@ class LayerXLogStore {
     _lastResponsesByEndpoint.clear();
   }
 
+  /// Restores a previously captured snapshot (used by the clear-session Undo).
+  static void restore(List<LayerXLogEntry> entries) {
+    logsNotifier.value = List<LayerXLogEntry>.from(entries);
+  }
+
   /// Renders all entries to a shareable plain-text report.
   static Future<String> exportLogsAsString() async {
     final buffer = StringBuffer();
