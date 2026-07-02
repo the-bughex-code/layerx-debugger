@@ -69,11 +69,13 @@ void main() {
 
     await tester.pumpWidget(const MaterialApp(home: LxDebuggerShell()));
     // The header's blinking cursor repeats forever, so pumpAndSettle would
-    // never return — advance time with a fixed pump instead.
+    // never return — advance time with fixed pumps instead.
     await tester.pump(const Duration(milliseconds: 400));
 
-    // Nav labels are rendered lower-cased in the Neo Terminal design.
-    await tester.tap(find.text('console'));
+    // An info log is not a problem, so it lives behind the Everything
+    // segment, whose default sub-pane is the Console.
+    await tester.tap(find.text('Everything'));
+    await tester.pump(const Duration(milliseconds: 400));
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.textContaining('hello viewer'), findsWidgets);

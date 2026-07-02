@@ -47,7 +47,10 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _header(e),
-        Padding(
+        // Horizontally scrollable so all four tabs fit narrow (320px) screens
+        // without a RenderFlex overflow.
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
           child: Row(
             children: [
