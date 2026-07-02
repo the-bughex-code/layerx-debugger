@@ -5,6 +5,21 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.4.1
+
+### Fixed
+
+- **The debug FAB now appears on every app with zero `builder:` wiring.**
+  Previously the floating debug button only showed when `LayerXDebugOverlay` was
+  wired into `MaterialApp.builder` — which the setup CLI skips whenever the app
+  already declares a `builder:` (nearly every GetX app), so the FAB was missing
+  even though the debugger initialized. The package now inserts the FAB/edge
+  triggers into the app's root `Overlay` at runtime (driven by the route
+  observer, kept above routes on navigation), so it works out of the box.
+  `LayerXDebugOverlay` still works for anyone who uses it, and the shared single
+  overlay entry guarantees there is never a duplicate FAB. All overlay work is
+  deferred and guarded so it never affects route logging or the host app.
+
 ## 1.4.0
 
 ### Added
