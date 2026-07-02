@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'package:layerx_debugger/src/config/enums/layerx_environment.dart';
 
 /// Where the edge-swipe gesture that opens the in-app viewer lives.
@@ -52,8 +54,25 @@ class LayerXDebugConfig {
   /// `apiKey` and `secret`.
   final List<String> maskKeys;
 
+  /// The explicitly-set environment, or null to auto-select by build mode.
+  final LayerXEnvironment? _environment;
+
   /// The active environment, controlling verbosity, colors and the viewer.
-  final LayerXEnvironment environment;
+  ///
+  /// When not set explicitly it auto-selects by build mode: [LayerXEnvironment.prod]
+  /// in release builds (viewer/FAB off, warnings+ only) and [LayerXEnvironment.dev]
+  /// otherwise. This means the debugger is debug/profile-only by default and can
+  /// never leak into a production release unless you opt in.
+  LayerXEnvironment get environment => resolveEnvironment(_environment);
+
+  /// Resolves the active environment from an [explicit] value (if any) and the
+  /// build mode. Exposed for testing; defaults [isRelease] to [kReleaseMode].
+  static LayerXEnvironment resolveEnvironment(
+    LayerXEnvironment? explicit, {
+    bool isRelease = kReleaseMode,
+  }) =>
+      explicit ??
+      (isRelease ? LayerXEnvironment.prod : LayerXEnvironment.dev);
 
   /// A human-readable application name shown in the viewer.
   final String appName;
@@ -98,6 +117,9 @@ class LayerXDebugConfig {
 
   /// Creates a configuration. All parameters have development-friendly
   /// defaults, so `const LayerXDebugConfig()` is a sensible starting point.
+  ///
+  /// Leave [environment] unset to auto-select by build mode (prod in release,
+  /// dev otherwise) — see [environment].
   const LayerXDebugConfig({
     this.enableApiLogs = true,
     this.enableRouteLogs = true,
@@ -106,7 +128,7 @@ class LayerXDebugConfig {
     this.enablePerformanceLogs = true,
     this.enableWidgetLogs = true,
     this.maskKeys = const [],
-    this.environment = LayerXEnvironment.dev,
+    LayerXEnvironment? environment,
     this.appName = 'LayerX App',
     this.packageName,
     this.enableFloatingButton = true,
@@ -118,7 +140,7 @@ class LayerXDebugConfig {
     this.autoInject = true,
     this.isLayerXArchitecture,
     this.onCrash,
-  });
+  }) : _environment = environment;
 
   /// Whether ANSI colors should be emitted, honoring [useColors] then the
   /// [environment] default.

@@ -5,6 +5,19 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.4.2
+
+### Changed
+
+- **The debugger is now debug/profile-only by default.** When `environment` is
+  not set explicitly, it auto-selects by build mode: `LayerXEnvironment.prod` in
+  release builds (viewer/FAB off, warnings+ only) and `LayerXEnvironment.dev`
+  otherwise. Previously the default was always `dev`, so a release build with
+  the default config would show the debug FAB to end users. The FAB/viewer can
+  no longer leak into a production release unless you opt in. Setting
+  `environment` explicitly still overrides the auto-selection, and debug/profile
+  behavior is unchanged.
+
 ## 1.4.1
 
 ### Fixed
