@@ -1,9 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'package:layerx_debugger/src/core/layerx_debugger_initializer.dart';
-import 'package:layerx_debugger/src/core/layerx_viewer_state.dart';
-import 'package:layerx_debugger/src/widgets/lx_edge_trigger.dart';
-import 'package:layerx_debugger/src/widgets/lx_fab_trigger.dart';
+import 'package:layerx_debugger/src/widgets/lx_overlay_installer.dart';
 
 /// Hosts the in-app LayerX log viewer above your application.
 ///
@@ -28,23 +26,21 @@ class LayerXDebugOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final config = LayerXDebugger.config;
-    if (!config.viewerEnabled) return child;
-
-    // While the debugger shell is open, hide the triggers entirely. This
-    // prevents duplicate FABs, overlay conflicts, and visibility bugs, and
-    // restores them automatically when the viewer is dismissed.
-    return ValueListenableBuilder<bool>(
-      valueListenable: LayerXViewerState.isOpen,
-      builder: (context, viewerOpen, _) {
-        return Stack(
-          children: [
-            child,
-            if (!viewerOpen && config.enableEdgeSwipe) const LxEdgeTrigger(),
-            if (!viewerOpen && config.enableFloatingButton) const LxFabTrigger(),
-          ],
-        );
-      },
-    );
+    // The triggers are now rendered by [LayerXOverlayInstaller] as a single
+    // entry in the app's root Overlay, so they appear on every app without any
+    // `builder:` wiring. This wrapper stays for backward compatibility: it just
+    // ensures the overlay is installed (into the root overlay of this context)
+    // and returns [child] unchanged. The shared entry guarantees there is never
+    // a duplicate FAB, whether or not an app wraps with this widget.
+    if (LayerXDebugger.config.viewerEnabled &&
+        !LayerXOverlayInstaller.isInstalled) {
+      final overlay = Overlay.maybeOf(context, rootOverlay: true);
+      if (overlay != null) {
+        LayerXOverlayInstaller.installInto(overlay);
+      } else {
+        LayerXOverlayInstaller.ensure();
+      }
+    }
+    return child;
   }
 }

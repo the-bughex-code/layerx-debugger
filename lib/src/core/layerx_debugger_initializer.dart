@@ -13,6 +13,7 @@ import 'package:layerx_debugger/src/repository/layerx_log_store.dart';
 import 'package:layerx_debugger/src/core/bindings/layerx_bindings.dart';
 import 'package:layerx_debugger/src/core/layerx_architecture_detector.dart';
 import 'package:layerx_debugger/src/config/layerx_debug_config.dart';
+import 'package:layerx_debugger/src/widgets/lx_overlay_installer.dart';
 
 /// Whether we're running under the Flutter test binding. Used to skip the
 /// global `debugPrint` override, which would otherwise trip
@@ -104,6 +105,12 @@ class LayerXDebugger {
       LayerXArchitectureDetector.printBanner(
         LayerXArchitectureDetector.detect(_config),
       );
+
+      // Auto-mount the in-app debug triggers (FAB + edge swipe) into the root
+      // overlay, so the viewer works with zero `MaterialApp.builder` wiring.
+      if (_config.viewerEnabled) {
+        LayerXOverlayInstaller.ensure();
+      }
     } catch (error, stack) {
       // The debugger must never take the app down.
       LayerXLog.log(
@@ -196,5 +203,6 @@ class LayerXDebugger {
     LayerXArchitectureDetector.reset();
     LayerXFrameMonitor.reset();
     LayerXConsoleCapture.reset();
+    LayerXOverlayInstaller.reset();
   }
 }

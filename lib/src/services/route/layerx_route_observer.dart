@@ -9,6 +9,7 @@ import 'package:layerx_debugger/src/config/enums/layerx_log_level.dart';
 import 'package:layerx_debugger/src/config/enums/layerx_log_source.dart';
 import 'package:layerx_debugger/src/config/utils/layerx_duplicate_guard.dart';
 import 'package:layerx_debugger/src/repository/layerx_log_store.dart';
+import 'package:layerx_debugger/src/widgets/lx_overlay_installer.dart';
 
 /// A [NavigatorObserver] that records route pushes, pops and replacements.
 ///
@@ -79,21 +80,41 @@ class LayerXRouteObserver extends NavigatorObserver {
     ));
   }
 
+  /// Ensures the debug triggers are mounted in this navigator's overlay and
+  /// kept above the current route. This is what makes the FAB appear on apps
+  /// that never wired `LayerXDebugOverlay` into `MaterialApp.builder`.
+  void _ensureTriggers() {
+    // Never let overlay wiring interfere with route logging or the host app.
+    try {
+      final overlay = navigator?.overlay;
+      if (overlay != null && overlay.mounted) {
+        LayerXOverlayInstaller.installInto(overlay);
+      } else {
+        // The overlay may not exist yet at the first didPush; fall back to the
+        // post-frame element-tree lookup, which resolves once the app is built.
+        LayerXOverlayInstaller.ensure();
+      }
+    } catch (_) {}
+  }
+
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPush(route, previousRoute);
     _logRoute(route, previousRoute, 'PUSH');
+    _ensureTriggers();
   }
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPop(route, previousRoute);
     _logRoute(route, previousRoute, 'POP');
+    _ensureTriggers();
   }
 
   @override
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
     super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
     _logRoute(newRoute, oldRoute, 'REPLACE');
+    _ensureTriggers();
   }
 }

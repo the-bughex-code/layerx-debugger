@@ -17,7 +17,10 @@ class LxFabTrigger extends StatefulWidget {
 
 class _LxFabTriggerState extends State<LxFabTrigger>
     with TickerProviderStateMixin {
-  Offset _offset = const Offset(-1, -1);
+  // Static so the dragged position and one-time mount animation survive the
+  // overlay entry being re-inserted on navigation (see LayerXOverlayInstaller).
+  static Offset _offset = const Offset(-1, -1);
+  static bool _mountedOnce = false;
   bool _isDragging = false;
 
   late final AnimationController _pulseCtrl;
@@ -44,7 +47,14 @@ class _LxFabTriggerState extends State<LxFabTrigger>
       duration: const Duration(milliseconds: 500),
     );
     _mountAnim = CurvedAnimation(parent: _mountCtrl, curve: Curves.elasticOut);
-    _mountCtrl.forward();
+    // Only play the elastic entrance the first time; on later re-inserts (route
+    // changes) the FAB should simply reappear where the user left it.
+    if (_mountedOnce) {
+      _mountCtrl.value = 1.0;
+    } else {
+      _mountCtrl.forward();
+      _mountedOnce = true;
+    }
   }
 
   @override
