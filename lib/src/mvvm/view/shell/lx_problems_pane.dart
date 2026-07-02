@@ -120,7 +120,8 @@ class LxProblemsPane extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: LxTheme.bodyPrimary.copyWith(
                       fontSize: 12.5,
-                      color: e.level.color == LxTheme.accentRed
+                      color: e.level == LayerXLogLevel.error ||
+                              e.level == LayerXLogLevel.fatal
                           ? LxTheme.accentRed
                           : LxTheme.textPrimary,
                     ),

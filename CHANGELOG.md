@@ -5,6 +5,19 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.6.0
+
+### Changed
+
+- **UX P1: the viewer now opens on a Problems inbox.** The 4-tab shell is
+  replaced by two segments — **Problems** (a worst-first inbox of errors,
+  crashes, warnings, changed responses, and slow requests ≥800ms) and
+  **Everything** (the full Console / Network / Dashboard, one tap away).
+  Details open by tapping a row (the Inspector can no longer cold-open on
+  "NOTHING SELECTED"), a labeled **Done** closes the viewer, Pause/Resume moved
+  into the ⋯ menu as labeled actions, and the FAB badge / header / settings
+  tile now all show the same number: open problems.
+
 ## 1.5.0
 
 ### Changed

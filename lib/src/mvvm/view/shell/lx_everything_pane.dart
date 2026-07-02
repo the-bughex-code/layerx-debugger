@@ -79,9 +79,11 @@ class _LxEverythingPaneState extends State<LxEverythingPane> {
     }
 
     return Container(
+      // 36 - 6 bottom padding leaves 30px for the ~28px chips; symmetric
+      // vertical padding would clip the labels (matches LxConsolePane's row).
       height: 36,
       alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+      padding: const EdgeInsets.only(left: 16, bottom: 6),
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
