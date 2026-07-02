@@ -282,18 +282,6 @@ class _LxFabTriggerState extends State<LxFabTrigger>
                   LxCopy.copyExport(context);
                 },
               ),
-              _menuTile(
-                ctx,
-                icon: Icons.delete_sweep_outlined,
-                color: LxTheme.accentRed,
-                label: 'Clear All Logs',
-                onTap: () {
-                  final messenger = ScaffoldMessenger.of(context);
-                  Navigator.pop(ctx);
-                  LayerXLogStore.clear();
-                  messenger.showSnackBar(LxTheme.snackBar('Logs cleared'));
-                },
-              ),
               const SizedBox(height: 8),
             ],
           ),

@@ -206,15 +206,6 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
           tooltip: 'Export all',
           onPressed: () => LxCopy.copyExport(context),
         ),
-        IconButton(
-          icon: const Icon(Icons.delete_sweep_outlined,
-              size: 20, color: LxTheme.accentRed),
-          tooltip: 'Clear all',
-          onPressed: () {
-            LayerXLogStore.clear();
-            LayerXViewerState.selected.value = null;
-          },
-        ),
       ],
     );
   }
