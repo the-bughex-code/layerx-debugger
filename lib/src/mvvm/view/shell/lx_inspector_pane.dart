@@ -1,11 +1,11 @@
 // Internal viewer screen — not part of the public API.
 // ignore_for_file: public_member_api_docs
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'package:layerx_debugger/src/config/lx_theme.dart';
 import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
 import 'package:layerx_debugger/src/mvvm/model/layerx_schema_change.dart';
+import 'package:layerx_debugger/src/mvvm/view/shell/lx_copy.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_ui_kit.dart';
 
 /// The "Inspector" destination — a deep dive on the selected log entry.
@@ -266,7 +266,7 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
                   const Spacer(),
                   if (_stackOpen)
                     GestureDetector(
-                      onTap: () => _copy(context, stack, 'Stack trace copied ✓'),
+                      onTap: () => LxCopy.copy(context, stack),
                       child: const Icon(Icons.copy,
                           size: 14, color: LxTheme.textSecondary),
                     ),
@@ -285,11 +285,6 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
     );
   }
 
-  void _copy(BuildContext context, String text, String toast) {
-    Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).showSnackBar(LxTheme.snackBar(toast));
-  }
-
   Widget _payload(String label, String? body) {
     if (body == null || body.trim().isEmpty) {
       return LxKit.emptyState(
@@ -301,7 +296,7 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
         Align(
           alignment: Alignment.centerRight,
           child: TextButton.icon(
-            onPressed: () => Clipboard.setData(ClipboardData(text: body)),
+            onPressed: () => LxCopy.copy(context, body),
             icon: const Icon(Icons.copy, size: 14, color: LxTheme.textSecondary),
             label: Text('Copy', style: LxTheme.monoSm),
           ),

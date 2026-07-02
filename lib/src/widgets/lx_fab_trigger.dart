@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
 import 'package:layerx_debugger/src/repository/layerx_log_store.dart';
+import 'package:layerx_debugger/src/mvvm/view/shell/lx_copy.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_debugger_shell.dart';
 import 'package:layerx_debugger/src/config/lx_theme.dart';
 import 'package:layerx_debugger/src/core/layerx_debugger_initializer.dart';
@@ -276,13 +277,9 @@ class _LxFabTriggerState extends State<LxFabTrigger>
                 icon: Icons.copy_outlined,
                 color: LxTheme.accentGreen,
                 label: 'Export & Copy All',
-                onTap: () async {
-                  final messenger = ScaffoldMessenger.of(context);
+                onTap: () {
                   Navigator.pop(ctx);
-                  await LayerXLogStore.copyExportToClipboard();
-                  messenger.showSnackBar(
-                    LxTheme.snackBar('All logs copied to clipboard ✓'),
-                  );
+                  LxCopy.copyExport(context);
                 },
               ),
               _menuTile(

@@ -1,12 +1,12 @@
 // Internal viewer screen — not part of the public API.
 // ignore_for_file: public_member_api_docs
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'package:layerx_debugger/src/config/enums/layerx_log_category.dart';
 import 'package:layerx_debugger/src/config/enums/layerx_log_level.dart';
 import 'package:layerx_debugger/src/config/lx_theme.dart';
 import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
+import 'package:layerx_debugger/src/mvvm/view/shell/lx_copy.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_ui_kit.dart';
 
 /// The "Console" destination — a chronological timeline of every log source.
@@ -240,11 +240,7 @@ class _LxConsolePaneState extends State<LxConsolePane> {
             ),
             GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () {
-                Clipboard.setData(ClipboardData(text: LxKit.copySummary(e)));
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(LxTheme.snackBar('Log copied ✓'));
-              },
+              onTap: () => LxCopy.copy(context, LxKit.copySummary(e)),
               child: const Padding(
                 padding: EdgeInsets.only(left: 8, top: 2),
                 child: Icon(Icons.copy, size: 14, color: LxTheme.textDim),

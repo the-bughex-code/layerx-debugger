@@ -8,6 +8,7 @@ import 'package:layerx_debugger/src/config/lx_theme.dart';
 import 'package:layerx_debugger/src/core/layerx_viewer_state.dart';
 import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_console_pane.dart';
+import 'package:layerx_debugger/src/mvvm/view/shell/lx_copy.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_dashboard_pane.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_inspector_pane.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_network_pane.dart';
@@ -203,11 +204,7 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
         IconButton(
           icon: const Icon(Icons.copy_all_outlined, size: 20),
           tooltip: 'Export all',
-          onPressed: () async {
-            final messenger = ScaffoldMessenger.of(context);
-            await LayerXLogStore.copyExportToClipboard();
-            messenger.showSnackBar(LxTheme.snackBar('Logs copied ✓'));
-          },
+          onPressed: () => LxCopy.copyExport(context),
         ),
         IconButton(
           icon: const Icon(Icons.delete_sweep_outlined,
