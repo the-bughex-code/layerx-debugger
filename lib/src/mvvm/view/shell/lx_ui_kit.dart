@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:layerx_debugger/src/config/enums/layerx_log_level.dart';
 import 'package:layerx_debugger/src/config/lx_theme.dart';
 import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
+import 'package:layerx_debugger/src/repository/layerx_log_store.dart';
 
 /// Shared helpers and small reusable widgets for the redesigned debugger shell.
 abstract final class LxKit {
@@ -16,11 +17,7 @@ abstract final class LxKit {
     return v is int ? v : null;
   }
 
-  static bool isProblem(LayerXLogEntry e) =>
-      e.level == LayerXLogLevel.error ||
-      e.level == LayerXLogLevel.fatal ||
-      e.level == LayerXLogLevel.warning ||
-      e.responseChanged;
+  static bool isProblem(LayerXLogEntry e) => LayerXLogStore.isProblemEntry(e);
 
   static Color methodColor(String? method) {
     switch ((method ?? '').toUpperCase()) {

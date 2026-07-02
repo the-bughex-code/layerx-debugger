@@ -32,6 +32,18 @@ class LayerXLogStore {
           log.level == LayerXLogLevel.fatal)
       .length;
 
+  /// Whether [log] is something a tester would report: an error, fatal,
+  /// warning, or an API response that changed shape.
+  static bool isProblemEntry(LayerXLogEntry log) =>
+      log.level == LayerXLogLevel.error ||
+      log.level == LayerXLogLevel.fatal ||
+      log.level == LayerXLogLevel.warning ||
+      log.responseChanged;
+
+  /// The single source of truth for "how many problems are open" — used by the
+  /// FAB badge, the header count, and the settings tile.
+  static int get openProblemCount => logs.where(isProblemEntry).length;
+
   /// The number of entries whose API response schema changed.
   static int get schemaChangeCount =>
       logs.where((log) => log.responseChanged).length;
