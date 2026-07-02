@@ -12,18 +12,21 @@ LayerXLogEntry _mk({
   required DateTime timestamp,
   bool responseChanged = false,
   int? durationMs,
+  LayerXLogSource source = LayerXLogSource.app,
+  int? statusCode,
 }) =>
     LayerXLogEntry(
       id: id,
       dedupKey: id,
       timestamp: timestamp,
       level: level,
-      source: LayerXLogSource.app,
+      source: source,
       category: LayerXLogCategory.app,
       message: id,
       journey: const [],
       extras: durationMs == null ? const {} : {'duration_ms': durationMs},
       responseChanged: responseChanged,
+      statusCode: statusCode,
     );
 
 void main() {
@@ -175,6 +178,86 @@ void main() {
       );
 
       expect(find.text('NO PROBLEMS YET'), findsOneWidget);
+    });
+
+    testWidgets('500-error card shows source label and a Backend verdict',
+        (tester) async {
+      final serverError = _mk(
+        id: 'the server blew up',
+        level: LayerXLogLevel.error,
+        timestamp: DateTime(2026, 1, 1, 10, 0, 0),
+        source: LayerXLogSource.server,
+        statusCode: 500,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LxProblemsPane(
+              logs: [serverError],
+              onInspect: (_) {},
+            ),
+          ),
+        ),
+      );
+
+      expect(find.textContaining(LayerXLogSource.server.label),
+          findsOneWidget);
+      expect(find.textContaining('Backend'), findsOneWidget);
+    });
+
+    testWidgets('info-level slow row shows no verdict but keeps the ⏱ chip',
+        (tester) async {
+      final slowInfo = _mk(
+        id: 'a slow but healthy call',
+        level: LayerXLogLevel.info,
+        timestamp: DateTime(2026, 1, 1, 10, 0, 0),
+        durationMs: 900,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LxProblemsPane(
+              logs: [slowInfo],
+              onInspect: (_) {},
+            ),
+          ),
+        ),
+      );
+
+      expect(find.textContaining('900ms'), findsOneWidget);
+      expect(find.textContaining('Backend'), findsNothing);
+      expect(find.textContaining('Undetermined'), findsNothing);
+    });
+
+    testWidgets(
+        'fatal entry renders exactly once alongside an error entry '
+        '(sanity: card decoration did not duplicate the row)', (tester) async {
+      final fatal = _mk(
+        id: 'app crashed hard',
+        level: LayerXLogLevel.fatal,
+        timestamp: DateTime(2026, 1, 1, 10, 0, 0),
+      );
+      final error = _mk(
+        id: 'a regular error',
+        level: LayerXLogLevel.error,
+        timestamp: DateTime(2026, 1, 1, 10, 0, 1),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: LxProblemsPane(
+              logs: [error, fatal],
+              onInspect: (_) {},
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('app crashed hard'), findsOneWidget);
+      expect(find.text('a regular error'), findsOneWidget);
     });
   });
 }

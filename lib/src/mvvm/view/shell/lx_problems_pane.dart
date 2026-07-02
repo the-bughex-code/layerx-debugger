@@ -6,6 +6,7 @@ import 'package:layerx_debugger/src/config/enums/layerx_log_level.dart';
 import 'package:layerx_debugger/src/config/lx_theme.dart';
 import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_ui_kit.dart';
+import 'package:layerx_debugger/src/mvvm/view_model/layerx_blame_engine.dart';
 import 'package:layerx_debugger/src/repository/layerx_log_store.dart';
 import 'package:layerx_debugger/src/repository/layerx_report_formatter.dart';
 
@@ -79,66 +80,84 @@ class LxProblemsPane extends StatelessWidget {
           );
   }
 
+  /// Resilient wrapper around [LayerXBlameEngine.analyze]: a card builder
+  /// must never throw, so any exception is swallowed and treated as "no
+  /// verdict" rather than crashing the inbox.
+  static LayerXBlameInfo? _blameOf(LayerXLogEntry e) {
+    try {
+      return LayerXBlameEngine.analyze(e);
+    } catch (_) {
+      return null;
+    }
+  }
+
   Widget _problemRow(LayerXLogEntry e) {
     final rail = e.level.color;
     final duration = LxKit.durationOf(e);
     final isSlowOnly = !LayerXLogStore.isProblemEntry(e) && _isSlow(e);
+    final isFatal = e.level == LayerXLogLevel.fatal;
+    final blame = _blameOf(e);
     final meta = [
       LayerXReportFormatter.relativeTime(e.timestamp),
-      e.source.label,
       if (e.occurrenceCount > 1) '×${e.occurrenceCount}',
+      if (isSlowOnly && duration != null) '⏱ ${duration}ms',
     ].join(' · ');
 
-    return InkWell(
-      onTap: () => onInspect(e),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: LxTheme.border)),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 3,
-              height: 30,
-              margin: const EdgeInsets.only(right: 11, top: 1),
-              decoration: BoxDecoration(
-                color: rail,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Icon(LxKit.levelIcon(e.level), color: rail, size: 15),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    e.message.split('\n').first,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: LxTheme.bodyPrimary.copyWith(
-                      fontSize: 12.5,
-                      color: e.level == LayerXLogLevel.error ||
-                              e.level == LayerXLogLevel.fatal
-                          ? LxTheme.accentRed
-                          : LxTheme.textPrimary,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => onInspect(e),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: isFatal
+                ? LxKit.railCard(rail).copyWith(
+                    color: LxTheme.accentRed.withValues(alpha: 0.08),
+                  )
+                : LxKit.railCard(rail),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(LxKit.levelIcon(e.level), color: rail, size: 15),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        e.message.split('\n').first,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: LxTheme.bodyPrimary.copyWith(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: e.level == LayerXLogLevel.error ||
+                                  e.level == LayerXLogLevel.fatal
+                              ? LxTheme.accentRed
+                              : LxTheme.textPrimary,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(meta,
-                      style: LxTheme.monoSm.copyWith(color: LxTheme.textDim)),
-                  if (isSlowOnly && duration != null) ...[
-                    const SizedBox(height: 2),
-                    Text('⏱ ${duration}ms',
-                        style: LxTheme.monoSm
-                            .copyWith(color: LxTheme.accentAmber)),
                   ],
+                ),
+                const SizedBox(height: 8),
+                LxKit.pill(e.source.label, e.source.color),
+                if (blame != null) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    blame.responsibleParty,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: LxTheme.bodySecondary,
+                  ),
                 ],
-              ),
+                const SizedBox(height: 6),
+                Text(meta,
+                    style: LxTheme.monoSm.copyWith(color: LxTheme.textDim)),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
