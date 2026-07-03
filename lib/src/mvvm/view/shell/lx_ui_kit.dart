@@ -144,24 +144,82 @@ abstract final class LxKit {
     );
   }
 
-  static Widget emptyState(IconData icon, String title, String subtitle) {
+  static Widget emptyState(IconData icon, String title, String subtitle,
+      {Widget? action}) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: LxTheme.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: LxTheme.border),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: LxTheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: LxTheme.border),
+              ),
+              child: Icon(icon, size: 36, color: LxTheme.textDim),
             ),
-            child: Icon(icon, size: 36, color: LxTheme.textDim),
+            const SizedBox(height: 18),
+            Text(title, style: LxTheme.sectionLabel),
+            const SizedBox(height: 8),
+            Text(subtitle,
+                style: LxTheme.bodySecondary, textAlign: TextAlign.center),
+            if (action != null) ...[
+              const SizedBox(height: 10),
+              action,
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// The one-tap escape hatch offered by filtered-empty states.
+  static Widget clearFiltersButton(VoidCallback onClear) => TextButton(
+        onPressed: onClear,
+        style: TextButton.styleFrom(foregroundColor: LxTheme.accent),
+        child: const Text('Clear filters',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+      );
+
+  /// A slim "Showing N of M" header rendered above a list whose filters hide
+  /// some (but not all) rows, with a one-tap "Show all" back to everything —
+  /// so a partially filtered view never masquerades as the full picture.
+  static Widget filterSummaryBar(int shown, int total, VoidCallback onClear) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      padding: const EdgeInsets.only(left: 10),
+      decoration: BoxDecoration(
+        color: LxTheme.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: LxTheme.border),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.filter_alt_outlined,
+              size: 13, color: LxTheme.textDim),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              'Showing $shown of $total',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: LxTheme.monoSm,
+            ),
           ),
-          const SizedBox(height: 18),
-          Text(title, style: LxTheme.sectionLabel),
-          const SizedBox(height: 8),
-          Text(subtitle, style: LxTheme.bodySecondary, textAlign: TextAlign.center),
+          TextButton(
+            onPressed: onClear,
+            style: TextButton.styleFrom(
+              foregroundColor: LxTheme.accent,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              minimumSize: const Size(0, 30),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text('Show all',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+          ),
         ],
       ),
     );

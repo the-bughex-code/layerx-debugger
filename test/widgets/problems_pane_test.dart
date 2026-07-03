@@ -178,6 +178,12 @@ void main() {
       );
 
       expect(find.text('NO PROBLEMS YET'), findsOneWidget);
+      // Scope-honest copy: the tool records, it can't retry.
+      expect(
+        find.text('Go use the app — anything that breaks shows up here. '
+            "This records what happened; it can't retry for you."),
+        findsOneWidget,
+      );
     });
 
     testWidgets('500-error card shows source label and a Backend verdict',

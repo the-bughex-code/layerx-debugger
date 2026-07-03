@@ -28,9 +28,26 @@ class _LxConsolePaneState extends State<LxConsolePane> {
   LayerXLogCategory? _category;
   LayerXLogLevel? _level;
   String _query = '';
+  final TextEditingController _queryCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _queryCtrl.dispose();
+    super.dispose();
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _queryCtrl.clear();
+      _query = '';
+      _category = null;
+      _level = null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final total = widget.logs.length;
     var rows = widget.logs.where((e) {
       if (_category != null && e.category != _category) return false;
       if (_level != null && e.level != _level) return false;
@@ -50,15 +67,29 @@ class _LxConsolePaneState extends State<LxConsolePane> {
       children: [
         _searchField(),
         _categoryChips(),
+        // Partial results never masquerade as everything: a slim honest
+        // header with a one-tap way back.
+        if (rows.isNotEmpty && rows.length < total)
+          LxKit.filterSummaryBar(rows.length, total, _clearFilters),
         Expanded(
-          child: rows.isEmpty
-              ? LxKit.emptyState(Icons.terminal, 'NO LOGS',
-                  'Nothing matches the current filter.')
-              : ListView.builder(
+          child: rows.isNotEmpty
+              ? ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                   itemCount: rows.length,
                   itemBuilder: (_, i) => LxKit.stagger(i, _logRow(rows[i])),
-                ),
+                )
+              // Filtered-empty ≠ truly-empty: when filters hid every row,
+              // say so and offer recovery instead of pretending silence.
+              : total > 0
+                  ? LxKit.emptyState(
+                      Icons.filter_alt_off,
+                      'NOTHING MATCHES',
+                      'Showing 0 of $total — clear the filters to see '
+                          'everything.',
+                      action: LxKit.clearFiltersButton(_clearFilters),
+                    )
+                  : LxKit.emptyState(Icons.terminal, 'NO LOGS',
+                      'Nothing matches the current filter.'),
         ),
       ],
     );
@@ -84,6 +115,7 @@ class _LxConsolePaneState extends State<LxConsolePane> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
+                      controller: _queryCtrl,
                       style: LxTheme.mono.copyWith(fontSize: 12),
                       cursorColor: LxTheme.accent,
                       decoration: InputDecoration(

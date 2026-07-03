@@ -90,6 +90,7 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
             body: Column(
               children: [
                 _segmentBar(),
+                if (_paused) _pausedBanner(),
                 Expanded(
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 220),
@@ -165,6 +166,49 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
         children: [
           segment('Problems', _LxSegment.problems),
           segment('Everything', _LxSegment.everything),
+        ],
+      ),
+    );
+  }
+
+  /// A full-width amber banner shown under the segment bar (so it survives
+  /// switching between Problems and Everything) whenever live capture is
+  /// paused — the frozen list must never pass for a live one. `Resume` is the
+  /// one-tap way back; the ⋯ menu items keep working alongside it.
+  Widget _pausedBanner() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(16, 2, 16, 6),
+      padding: const EdgeInsets.only(left: 10),
+      decoration: BoxDecoration(
+        color: LxTheme.accentAmber.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: LxTheme.accentAmber.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.pause_circle_outline,
+              size: 15, color: LxTheme.accentAmber),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Paused — not capturing new problems',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: LxTheme.monoSm.copyWith(color: LxTheme.accentAmber),
+            ),
+          ),
+          TextButton(
+            onPressed: _togglePaused,
+            style: TextButton.styleFrom(
+              foregroundColor: LxTheme.accentAmber,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              minimumSize: const Size(0, 34),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text('Resume',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+          ),
         ],
       ),
     );

@@ -56,6 +56,16 @@ class LxDashboardPane extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
       children: [
         _healthHero(score, errors, warnings, schemaChanges),
+        const SizedBox(height: 6),
+        // Keeps the score honest: it's a developer-facing aggregate, not the
+        // thing a tester should act on.
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Text(
+            'Developer metric — problems above are what matter',
+            style: LxTheme.monoSm.copyWith(color: LxTheme.textDim),
+          ),
+        ),
         const SizedBox(height: 12),
         _metricsGrid(network.length, errors, avgLatency, schemaChanges),
         const SizedBox(height: 12),

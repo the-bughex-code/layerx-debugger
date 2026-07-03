@@ -71,7 +71,10 @@ class LxProblemsPane extends StatelessWidget {
         ? LxKit.emptyState(
             Icons.inbox_outlined,
             'NO PROBLEMS YET',
-            'Go use the app — anything that breaks will show up here.',
+            // Scope-honest: this tool records what happened; it can't retry
+            // or fix anything on the tester's behalf.
+            'Go use the app — anything that breaks shows up here. '
+                "This records what happened; it can't retry for you.",
           )
         : ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),

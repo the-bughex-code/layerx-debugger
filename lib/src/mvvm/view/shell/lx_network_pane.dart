@@ -26,12 +26,28 @@ class LxNetworkPane extends StatefulWidget {
 class _LxNetworkPaneState extends State<LxNetworkPane> {
   _NetFilter _filter = _NetFilter.all;
   String _query = '';
+  final TextEditingController _queryCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _queryCtrl.dispose();
+    super.dispose();
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _queryCtrl.clear();
+      _query = '';
+      _filter = _NetFilter.all;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    var rows = widget.logs.where(LxKit.isNetwork).toList();
+    final all = widget.logs.where(LxKit.isNetwork).toList();
+    final total = all.length;
 
-    rows = rows.where((e) {
+    final rows = all.where((e) {
       switch (_filter) {
         case _NetFilter.all:
           break;
@@ -59,16 +75,30 @@ class _LxNetworkPaneState extends State<LxNetworkPane> {
       children: [
         _searchField(),
         _filterChips(),
+        // Partial results never masquerade as everything: a slim honest
+        // header with a one-tap way back.
+        if (rows.isNotEmpty && rows.length < total)
+          LxKit.filterSummaryBar(rows.length, total, _clearFilters),
         Expanded(
-          child: rows.isEmpty
-              ? LxKit.emptyState(Icons.wifi_tethering_off, 'NO REQUESTS',
-                  'No network calls match this view yet.')
-              : ListView.separated(
+          child: rows.isNotEmpty
+              ? ListView.separated(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
                   itemCount: rows.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 8),
                   itemBuilder: (_, i) => LxKit.stagger(i, _requestRow(rows[i])),
-                ),
+                )
+              // Filtered-empty ≠ truly-empty: when the query/chip hid every
+              // captured request, say so and offer recovery.
+              : total > 0
+                  ? LxKit.emptyState(
+                      Icons.filter_alt_off,
+                      'NOTHING MATCHES',
+                      'Showing 0 of $total — clear the filters to see '
+                          'everything.',
+                      action: LxKit.clearFiltersButton(_clearFilters),
+                    )
+                  : LxKit.emptyState(Icons.wifi_tethering_off, 'NO REQUESTS',
+                      'No network calls match this view yet.'),
         ),
       ],
     );
@@ -91,6 +121,7 @@ class _LxNetworkPaneState extends State<LxNetworkPane> {
             const SizedBox(width: 8),
             Expanded(
               child: TextField(
+                controller: _queryCtrl,
                 style: LxTheme.mono.copyWith(fontSize: 12),
                 cursorColor: LxTheme.accent,
                 decoration: InputDecoration(
