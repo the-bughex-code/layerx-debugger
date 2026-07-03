@@ -192,7 +192,7 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Paused — not capturing new problems',
+              'Paused — new activity is hidden until you resume',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: LxTheme.monoSm.copyWith(color: LxTheme.accentAmber),
@@ -428,7 +428,9 @@ class _LxDetailScreenState extends State<_LxDetailScreen> {
           child: Divider(height: 1, thickness: 1, color: LxTheme.border),
         ),
       ),
-      body: LxInspectorPane(log: entry),
+      // Keyed per entry so Prev/Next resets the report's scroll position
+      // (and any per-entry state) instead of reusing the old offset.
+      body: LxInspectorPane(key: ValueKey(entry.id), log: entry),
       bottomNavigationBar: SafeArea(
         child: Container(
           padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),

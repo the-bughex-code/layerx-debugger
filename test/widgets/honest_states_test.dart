@@ -10,7 +10,7 @@ import 'package:layerx_debugger/src/mvvm/view/shell/lx_debugger_shell.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_network_pane.dart';
 import 'package:layerx_debugger/src/repository/layerx_log_store.dart';
 
-const _pausedBannerText = 'Paused — not capturing new problems';
+const _pausedBannerText = 'Paused — new activity is hidden until you resume';
 
 LayerXLogEntry _entry(
   String id, {

@@ -92,7 +92,7 @@ class LayerXBlameEngine {
         );
       }
       return LayerXBlameInfo(
-        responsibleParty: '🖥️ Backend Server (${code}xx Internal Error)',
+        responsibleParty: '🖥️ Backend Server (${code ~/ 100}xx Internal Error)',
         explanation:
             'HTTP $code. The server threw an unhandled exception. This means a crash inside the '
             'backend code. The mobile app is sending a valid request — the problem is server-side.',

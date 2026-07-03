@@ -5,6 +5,24 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.7.0
+
+### Changed
+
+- **UX P2: the debugger now tells you whose fault it is.** Every problem card
+  leads with a plain-language verdict from the built-in blame engine (e.g.
+  "🖥️ Backend Server (5xx Internal Error)"), and opening a problem reads
+  top-to-bottom like a bug report: who to assign & why → suggested fix →
+  details → what the app sent → what the server answered → journey → collapsed
+  technical stack. A persistent **Copy bug report** button (with Prev/Next to
+  walk problems) produces a complete, paste-ready ticket. States are honest:
+  filtered-empty offers "Clear filters", truly-empty explains the tool records
+  (it can't retry), and pausing shows a full-width banner. Friendly labels
+  everywhere (🖥 Server Error instead of `server`, relative time instead of
+  ISO-8601, "response changed shape" instead of Δ/schema). Slow requests
+  (≥800ms, configurable via `LayerXLogStore.slowRequestThresholdMs`) now count
+  as problems in every badge and count.
+
 ## 1.6.0
 
 ### Changed

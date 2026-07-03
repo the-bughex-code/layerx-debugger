@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:layerx_debugger/src/config/lx_theme.dart';
 import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_ui_kit.dart';
+import 'package:layerx_debugger/src/repository/layerx_log_store.dart';
 
 enum _NetFilter { all, errors, slow, changed }
 
@@ -55,7 +56,10 @@ class _LxNetworkPaneState extends State<LxNetworkPane> {
           if ((e.statusCode ?? 0) < 400) return false;
           break;
         case _NetFilter.slow:
-          if ((LxKit.durationOf(e) ?? 0) < 800) return false;
+          if ((LxKit.durationOf(e) ?? 0) <
+              LayerXLogStore.slowRequestThresholdMs) {
+            return false;
+          }
           break;
         case _NetFilter.changed:
           if (!e.responseChanged) return false;
