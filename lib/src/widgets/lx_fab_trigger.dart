@@ -18,8 +18,17 @@ class LxFabTrigger extends StatefulWidget {
 
 class _LxFabTriggerState extends State<LxFabTrigger>
     with TickerProviderStateMixin {
+  // §4.5 / UX P3: the trigger is a labeled pill ("Report a bug"), not an
+  // anonymous round FAB. The pill is width-capped so a 320px screen fits it
+  // with margins; on narrower screens it shrinks and the label ellipsizes.
+  static const double _pillMaxWidth = 170;
+  static const double _pillHeight = 48;
+
   // Static so the dragged position and one-time mount animation survive the
   // overlay entry being re-inserted on navigation (see LayerXOverlayInstaller).
+  // `dx` is the distance from the RIGHT screen edge (the pill is right-anchored
+  // so its resting margin stays exact regardless of the label's actual width);
+  // `dy` is the distance from the top.
   static Offset _offset = const Offset(-1, -1);
   static bool _mountedOnce = false;
   bool _isDragging = false;
@@ -107,12 +116,23 @@ class _LxFabTriggerState extends State<LxFabTrigger>
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
+    final pillWidth = math.min(_pillMaxWidth, screenSize.width - 24);
+    final maxRight = math.max(8.0, screenSize.width - pillWidth - 8);
+    final maxTop = math.max(50.0, screenSize.height - 100.0);
     if (_offset.dx == -1 && _offset.dy == -1) {
-      _offset = Offset(screenSize.width - 72, screenSize.height - 148);
+      // Rest: right-aligned with a 16px margin, above the home-bar region.
+      _offset = Offset(16, screenSize.height - 148);
     }
+    // Re-clamp the remembered position into the *current* screen so the pill
+    // stays fully reachable after a rotation or a re-insert on a narrower
+    // (e.g. 320px) screen.
+    _offset = Offset(
+      _offset.dx.clamp(8.0, maxRight),
+      _offset.dy.clamp(50.0, maxTop),
+    );
 
     return Positioned(
-      left: _offset.dx,
+      right: _offset.dx,
       top: _offset.dy,
       child: ScaleTransition(
         scale: _mountAnim,
@@ -127,11 +147,13 @@ class _LxFabTriggerState extends State<LxFabTrigger>
               onPanStart: (_) => setState(() => _isDragging = true),
               onPanUpdate: (details) {
                 setState(() {
-                  var newX = _offset.dx + details.delta.dx;
-                  var newY = _offset.dy + details.delta.dy;
-                  newX = newX.clamp(10.0, screenSize.width - 70.0);
-                  newY = newY.clamp(50.0, screenSize.height - 100.0);
-                  _offset = Offset(newX, newY);
+                  // dx measures from the right edge, so it moves opposite to
+                  // the finger's horizontal delta.
+                  final newRight =
+                      (_offset.dx - details.delta.dx).clamp(8.0, maxRight);
+                  final newTop =
+                      (_offset.dy + details.delta.dy).clamp(50.0, maxTop);
+                  _offset = Offset(newRight, newTop);
                 });
               },
               onPanEnd: (_) => setState(() => _isDragging = false),
@@ -140,31 +162,41 @@ class _LxFabTriggerState extends State<LxFabTrigger>
               child: AnimatedBuilder(
                 animation: _pulseAnim,
                 builder: (context, child) {
+                  final inset = _pulseAnim.value * 5;
                   return Stack(
                     alignment: Alignment.center,
                     clipBehavior: Clip.none,
                     children: [
                       // ── Outer pulse ring ────────────────────────────────
                       if (!_isDragging)
-                        Container(
-                          width: 56 + (_pulseAnim.value * 10),
-                          height: 56 + (_pulseAnim.value * 10),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: accentColor.withValues(
-                                  alpha: (1.0 - _pulseAnim.value) * 0.5),
-                              width: 1.5,
+                        Positioned(
+                          left: -inset,
+                          top: -inset,
+                          right: -inset,
+                          bottom: -inset,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(
+                                  _pillHeight / 2 + inset),
+                              border: Border.all(
+                                color: accentColor.withValues(
+                                    alpha: (1.0 - _pulseAnim.value) * 0.5),
+                                width: 1.5,
+                              ),
                             ),
                           ),
                         ),
 
-                      // ── Main FAB body ───────────────────────────────────
+                      // ── Main pill body: bug icon + static label ─────────
+                      // (§4.5 / P3 task 5: the badge carries the count, the
+                      // label never changes.)
                       Container(
-                        width: 50,
-                        height: 50,
+                        width: pillWidth,
+                        height: _pillHeight,
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle,
+                          borderRadius:
+                              BorderRadius.circular(_pillHeight / 2),
                           color: LxTheme.surface,
                           border: Border.all(
                             color: accentColor.withValues(alpha: 0.7),
@@ -188,13 +220,34 @@ class _LxFabTriggerState extends State<LxFabTrigger>
                             ),
                           ],
                         ),
-                        child: Transform.rotate(
-                          angle: hasErrors ? math.pi / 12 : 0,
-                          child: Icon(
-                            hasErrors ? Icons.bug_report : Icons.pest_control_outlined,
-                            color: accentColor,
-                            size: 22,
-                          ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Transform.rotate(
+                              angle: hasErrors ? math.pi / 12 : 0,
+                              child: Icon(
+                                hasErrors
+                                    ? Icons.bug_report
+                                    : Icons.pest_control_outlined,
+                                color: accentColor,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Flexible(
+                              child: Text(
+                                'Report a bug',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: LxTheme.textPrimary,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.1,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
 

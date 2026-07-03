@@ -85,11 +85,13 @@ abstract final class LxTheme {
         ),
       ];
 
+  /// §4.4 `elev.1` — a subtle physical shadow (0 1 2, 40% black); the visible
+  /// hairline border does the separating, the shadow just lifts the card.
   static List<BoxShadow> cardShadow = [
     const BoxShadow(
       color: Color(0x66000000),
-      blurRadius: 14,
-      offset: Offset(0, 5),
+      blurRadius: 2,
+      offset: Offset(0, 1),
     ),
   ];
 
@@ -173,15 +175,17 @@ abstract final class LxTheme {
   );
 
   // ── Badge / pill ───────────────────────────────────────────────────────────
+  // §4.5 pills: `radius.sm` (8) and a clearly visible edge on the tint fill —
+  // a chip must read as a bounded control, not a faint wash.
   static BoxDecoration pill(Color color) => BoxDecoration(
         color: color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withValues(alpha: 0.45)),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.55)),
       );
 
   static BoxDecoration pillSolid(Color color) => BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(8),
       );
 
   // ── Divider ────────────────────────────────────────────────────────────────

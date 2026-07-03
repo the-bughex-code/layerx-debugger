@@ -19,20 +19,23 @@ abstract final class LxKit {
 
   static bool isProblem(LayerXLogEntry e) => LayerXLogStore.isProblemEntry(e);
 
+  /// §4.2.4: method colors re-point at the semantic set — `GET → info`,
+  /// `POST → brand`, `PUT/PATCH → warning`, `DELETE → critical`, other →
+  /// neutral — so a method's color is a meaning the tester already reads
+  /// elsewhere, not a raw neon.
   static Color methodColor(String? method) {
     switch ((method ?? '').toUpperCase()) {
       case 'GET':
-        return LxTheme.accentGreen;
+        return LxTheme.accentBlue; // info
       case 'POST':
-        return LxTheme.accentBlue;
+        return LxTheme.accent; // brand
       case 'PUT':
-        return LxTheme.accentAmber;
       case 'PATCH':
-        return LxTheme.accentPurple;
+        return LxTheme.accentAmber; // warning
       case 'DELETE':
-        return LxTheme.accentRed;
+        return LxTheme.critical; // critical
       default:
-        return LxTheme.accentCyan;
+        return LxTheme.textSecondary; // neutral
     }
   }
 
@@ -91,18 +94,20 @@ abstract final class LxKit {
         child: Text(text, style: LxTheme.sectionLabel),
       );
 
+  /// §4.5.4-style tinted pill — sans label on a semantic tint with a visible
+  /// edge (mono retired here per §4.6; monospace is for payloads only).
   static Widget pill(String text, Color color, {bool solid = false}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: LxTheme.pill(color),
       child: Text(
         text,
         style: TextStyle(
           color: color,
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: FontWeight.w700,
-          fontFamily: 'monospace',
-          letterSpacing: 0.3,
+          letterSpacing: 0.2,
+          height: 1.35,
         ),
       ),
     );
@@ -111,15 +116,18 @@ abstract final class LxKit {
   /// A card with a colored left rail — used for issue/problem rows.
   ///
   /// Corners are square: Flutter forbids a [borderRadius] on a [Border] whose
-  /// sides have non-uniform colors (the rail differs from the other sides), and
-  /// crisp left-accent rows suit the Neo Terminal look anyway.
+  /// sides have non-uniform colors (the rail differs from the other sides).
+  /// Per §4.5 the other three sides use the stronger [LxTheme.borderActive]
+  /// plus a subtle elev-1 shadow, so every row reads as a clearly bounded
+  /// surface instead of floating on the background.
   static BoxDecoration railCard(Color rail) => BoxDecoration(
         color: LxTheme.surface,
+        boxShadow: LxTheme.cardShadow,
         border: Border(
           left: BorderSide(color: rail, width: 3),
-          top: const BorderSide(color: LxTheme.border),
-          right: const BorderSide(color: LxTheme.border),
-          bottom: const BorderSide(color: LxTheme.border),
+          top: const BorderSide(color: LxTheme.borderActive),
+          right: const BorderSide(color: LxTheme.borderActive),
+          bottom: const BorderSide(color: LxTheme.borderActive),
         ),
       );
 
@@ -152,17 +160,29 @@ abstract final class LxKit {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // §4.5.8: icon in a surfaceAlt radius-lg tile with a visible edge.
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: LxTheme.surface,
+                color: LxTheme.surfaceAlt,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: LxTheme.border),
               ),
-              child: Icon(icon, size: 36, color: LxTheme.textDim),
+              child: Icon(icon, size: 36, color: LxTheme.textTertiary),
             ),
             const SizedBox(height: 18),
-            Text(title, style: LxTheme.sectionLabel),
+            // §4.5.8 / §4.3 `titleM` — a readable sans heading, not an
+            // 11px overline.
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                color: LxTheme.textPrimary,
+                height: 1.3,
+              ),
+            ),
             const SizedBox(height: 8),
             Text(subtitle,
                 style: LxTheme.bodySecondary, textAlign: TextAlign.center),
@@ -194,7 +214,9 @@ abstract final class LxKit {
       decoration: BoxDecoration(
         color: LxTheme.surface,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: LxTheme.border),
+        // borderActive: an active filter is a selected control (§4.5), and the
+        // bar must read as clearly bounded — it is a warning, not decoration.
+        border: Border.all(color: LxTheme.borderActive),
       ),
       child: Row(
         children: [

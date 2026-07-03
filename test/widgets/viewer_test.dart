@@ -24,6 +24,41 @@ void main() {
 
     expect(find.byIcon(Icons.bug_report), findsOneWidget);
     expect(find.text('1'), findsOneWidget);
+    // UX P3: the label is static — the badge carries the count.
+    expect(find.text('Report a bug'), findsOneWidget);
+  });
+
+  testWidgets('FAB is a labeled "Report a bug" pill at rest', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: LayerXDebugOverlay(child: Scaffold(body: Text('app'))),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Report a bug'), findsOneWidget);
+    expect(find.byIcon(Icons.pest_control_outlined), findsOneWidget);
+  });
+
+  testWidgets('labeled FAB fits a 320px-wide screen', (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    LayerXLog.e('boom'); // widest case: error state + badge
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: LayerXDebugOverlay(child: Scaffold(body: Text('app'))),
+      ),
+    );
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+
+    expect(find.text('Report a bug'), findsOneWidget);
+    final label = tester.getRect(find.text('Report a bug'));
+    expect(label.left, greaterThanOrEqualTo(0));
+    expect(label.right, lessThanOrEqualTo(320));
   });
 
   testWidgets('LayerXDebugOverlay hides the viewer in production',

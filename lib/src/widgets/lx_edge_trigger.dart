@@ -52,12 +52,16 @@ class LxEdgeTrigger extends StatelessWidget {
             alignment: isLeft
                 ? Alignment.centerLeft
                 : (isRight ? Alignment.centerRight : Alignment.bottomCenter),
+            // §4.5 / UX P3: a visible rounded grab handle (~4×48) centered on
+            // the edge — replaces the old barely-there glow hairline. Same
+            // swipe gesture; the handle just makes the affordance findable.
             child: Container(
-              width: isBottom ? double.infinity : 1.5,
-              height: isBottom ? 1.5 : double.infinity,
+              margin: const EdgeInsets.all(3),
+              width: isBottom ? 48.0 : 4.0,
+              height: isBottom ? 4.0 : 48.0,
               decoration: BoxDecoration(
-                color: LxTheme.accentBlue.withValues(alpha: 0.3),
-                boxShadow: LxTheme.glowShadow(LxTheme.accentBlue, spread: 2),
+                color: LxTheme.borderActive,
+                borderRadius: BorderRadius.circular(999),
               ),
             ),
           ),
