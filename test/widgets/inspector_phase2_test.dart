@@ -41,10 +41,14 @@ void main() {
     expect(find.text('UI Exceptions'), findsWidgets);
     expect(find.text('lib/home.dart:42'), findsOneWidget);
 
-    expect(find.text('STACK TRACE'), findsOneWidget);
+    // The collapsible stack section's tappable header is now the last section
+    // of the single-scroll bug report, labeled TECHNICAL DETAILS.
+    await tester.scrollUntilVisible(find.text('TECHNICAL DETAILS'), 80,
+        scrollable: find.byType(Scrollable).first);
+    expect(find.text('TECHNICAL DETAILS'), findsOneWidget);
     expect(find.textContaining('#0 Home.build'), findsNothing);
 
-    await tester.tap(find.text('STACK TRACE'));
+    await tester.tap(find.text('TECHNICAL DETAILS'));
     await tester.pumpAndSettle();
     expect(find.textContaining('#0 Home.build'), findsOneWidget);
   });

@@ -7,8 +7,13 @@ import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
 import 'package:layerx_debugger/src/mvvm/model/layerx_schema_change.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_copy.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_ui_kit.dart';
+import 'package:layerx_debugger/src/mvvm/view_model/layerx_blame_engine.dart';
+import 'package:layerx_debugger/src/repository/layerx_report_formatter.dart';
 
-/// The "Inspector" destination — a deep dive on the selected log entry.
+/// The "Inspector" destination — the selected entry rendered top-to-bottom as
+/// an assignable bug report: who to assign & why → suggested fix → details →
+/// what the app sent (request) → what the server answered (response) →
+/// journey → collapsed technical details.
 class LxInspectorPane extends StatefulWidget {
   final LayerXLogEntry? log;
   const LxInspectorPane({super.key, required this.log});
@@ -18,15 +23,24 @@ class LxInspectorPane extends StatefulWidget {
 }
 
 class _LxInspectorPaneState extends State<LxInspectorPane> {
-  int _tab = 0;
   bool _stackOpen = false;
 
   @override
   void didUpdateWidget(covariant LxInspectorPane old) {
     super.didUpdateWidget(old);
     if (old.log?.id != widget.log?.id) {
-      _tab = 0;
       _stackOpen = false;
+    }
+  }
+
+  /// Resilient wrapper around [LayerXBlameEngine.analyze]: the report builder
+  /// must never throw, so any exception is swallowed and treated as "no
+  /// verdict" rather than crashing the detail screen.
+  static LayerXBlameInfo? _blameOf(LayerXLogEntry e) {
+    try {
+      return LayerXBlameEngine.analyze(e);
+    } catch (_) {
+      return null;
     }
   }
 
@@ -41,24 +55,11 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
       );
     }
 
-    final tabs = <String>['Overview', 'Response', 'Request', 'Trace'];
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _header(e),
-        // Horizontally scrollable so all four tabs fit narrow (320px) screens
-        // without a RenderFlex overflow.
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
-          child: Row(
-            children: [
-              for (var i = 0; i < tabs.length; i++) _tabButton(tabs[i], i),
-            ],
-          ),
-        ),
-        Expanded(child: _tabBody(e)),
+        Expanded(child: _report(e)),
       ],
     );
   }
@@ -104,44 +105,21 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
     );
   }
 
-  Widget _tabButton(String label, int i) {
-    final active = _tab == i;
-    return GestureDetector(
-      onTap: () => setState(() => _tab = i),
-      child: Container(
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: active ? LxTheme.surfaceHigh : Colors.transparent,
-          borderRadius: BorderRadius.circular(9),
-          border: Border.all(
-              color: active ? LxTheme.borderActive : Colors.transparent),
-        ),
-        child: Text(label,
-            style: LxTheme.monoSm.copyWith(
-                color: active ? LxTheme.textPrimary : LxTheme.textSecondary)),
-      ),
-    );
-  }
-
-  Widget _tabBody(LayerXLogEntry e) {
-    switch (_tab) {
-      case 1:
-        return _payload('Response', e.responsePayload);
-      case 2:
-        return _payload('Request', e.requestPayload);
-      case 3:
-        return _trace(e);
-      default:
-        return _overview(e);
-    }
-  }
-
-  Widget _overview(LayerXLogEntry e) {
+  /// The whole bug report as ONE scroll, in the order a reader needs it:
+  /// verdict → suggestion → details → request → response (+ contract changes)
+  /// → journey → collapsed stack. Empty sections are omitted entirely.
+  Widget _report(LayerXLogEntry e) {
+    final blame = _blameOf(e);
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
+        if (blame != null) ...[
+          LxKit.sectionLabel('WHO TO ASSIGN & WHY'),
+          _blameCard(blame),
+          const SizedBox(height: 14),
+        ],
         if (e.suggestedSolution != null) ...[
+          LxKit.sectionLabel('WHAT WE SUGGEST'),
           Container(
             padding: const EdgeInsets.all(13),
             decoration: BoxDecoration(
@@ -164,6 +142,27 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
           ),
           const SizedBox(height: 14),
         ],
+        LxKit.sectionLabel('DETAILS'),
+        _kv('Message', e.message),
+        _kv('Source', e.source.label),
+        _kv('Category', e.category.label),
+        _kv('Level', e.level.label),
+        if (e.sourceFile != null)
+          _kv('Location', '${e.sourceFile}:${e.sourceLine ?? '?'}'),
+        if (e.statusCode != null) _kv('Status', '${e.statusCode}'),
+        if (e.errorCode != null) _kv('Error code', e.errorCode!),
+        if (e.controllerName != null) _kv('Controller', e.controllerName!),
+        if (e.screenName != null) _kv('Screen', e.screenName!),
+        if (LxKit.durationOf(e) != null) _kv('Duration', '${LxKit.durationOf(e)}ms'),
+        _kv(
+            'Time',
+            '${LayerXReportFormatter.relativeTime(e.timestamp)} · '
+                '${LxKit.clockTime(e.timestamp)}'),
+        if (e.occurrenceCount > 1) _kv('Occurrences', '×${e.occurrenceCount}'),
+        const SizedBox(height: 14),
+        ..._payloadSection('WHAT THE APP SENT (REQUEST)', e.requestPayload),
+        ..._payloadSection(
+            'WHAT THE SERVER ANSWERED (RESPONSE)', e.responsePayload),
         if (e.responseChanged && e.schemaChanges.isNotEmpty) ...[
           LxKit.sectionLabel('CONTRACT CHANGES'),
           Container(
@@ -180,25 +179,58 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
           ),
           const SizedBox(height: 14),
         ],
-        LxKit.sectionLabel('DETAILS'),
-        _kv('Message', e.message),
-        _kv('Source', e.source.name),
-        _kv('Category', e.category.label),
-        _kv('Level', e.level.label),
-        if (e.sourceFile != null)
-          _kv('Location', '${e.sourceFile}:${e.sourceLine ?? '?'}'),
-        if (e.statusCode != null) _kv('Status', '${e.statusCode}'),
-        if (e.errorCode != null) _kv('Error code', e.errorCode!),
-        if (e.controllerName != null) _kv('Controller', e.controllerName!),
-        if (e.screenName != null) _kv('Screen', e.screenName!),
-        if (LxKit.durationOf(e) != null) _kv('Duration', '${LxKit.durationOf(e)}ms'),
-        _kv('Time', e.timestamp.toIso8601String()),
-        if (e.occurrenceCount > 1) _kv('Occurrences', '×${e.occurrenceCount}'),
-        if (e.stackTrace != null) ...[
+        if (e.journey.isNotEmpty) ...[
+          LxKit.sectionLabel('JOURNEY'),
+          _trace(e),
           const SizedBox(height: 14),
-          _stackSection(context, e.stackTrace!),
         ],
+        if (e.stackTrace != null) _stackSection(context, e.stackTrace!),
       ],
+    );
+  }
+
+  Widget _blameCard(LayerXBlameInfo blame) {
+    return Container(
+      padding: const EdgeInsets.all(13),
+      decoration: BoxDecoration(
+        color: LxTheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: blame.color.withValues(alpha: 0.55)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(blame.icon, color: blame.color, size: 18),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  blame.responsibleParty,
+                  style: LxTheme.bodyPrimary.copyWith(
+                      fontWeight: FontWeight.w700, color: blame.color),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(blame.explanation,
+              style: LxTheme.bodySecondary.copyWith(height: 1.5)),
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: LxTheme.surfaceAlt,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: LxTheme.border),
+            ),
+            child: Text(blame.qaNote,
+                style: LxTheme.bodySecondary.copyWith(height: 1.5)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -246,6 +278,35 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
     );
   }
 
+  /// A payload section (request or response). Empty payloads are omitted
+  /// entirely — no empty-state placeholder.
+  List<Widget> _payloadSection(String label, String? body) {
+    if (body == null || body.trim().isEmpty) return const [];
+    return [
+      Row(
+        children: [
+          Expanded(child: LxKit.sectionLabel(label)),
+          TextButton.icon(
+            onPressed: () => LxCopy.copy(context, body),
+            icon: const Icon(Icons.copy, size: 14, color: LxTheme.textSecondary),
+            label: Text('Copy', style: LxTheme.monoSm),
+          ),
+        ],
+      ),
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(13),
+        decoration: BoxDecoration(
+          color: LxTheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: LxTheme.border),
+        ),
+        child: SelectableText(body, style: LxTheme.mono.copyWith(fontSize: 11.5)),
+      ),
+      const SizedBox(height: 14),
+    ];
+  }
+
   Widget _stackSection(BuildContext context, String stack) {
     return Container(
       decoration: BoxDecoration(
@@ -265,7 +326,7 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
                   Icon(_stackOpen ? Icons.expand_more : Icons.chevron_right,
                       size: 18, color: LxTheme.textSecondary),
                   const SizedBox(width: 8),
-                  Text('STACK TRACE', style: LxTheme.sectionLabel),
+                  Text('TECHNICAL DETAILS', style: LxTheme.sectionLabel),
                   const Spacer(),
                   if (_stackOpen)
                     GestureDetector(
@@ -288,92 +349,60 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
     );
   }
 
-  Widget _payload(String label, String? body) {
-    if (body == null || body.trim().isEmpty) {
-      return LxKit.emptyState(
-          Icons.data_object, 'NO $label BODY', 'This entry has no $label payload.');
-    }
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+  /// The journey timeline, rendered inline (journeys are short).
+  Widget _trace(LayerXLogEntry e) {
+    return Column(
       children: [
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton.icon(
-            onPressed: () => LxCopy.copy(context, body),
-            icon: const Icon(Icons.copy, size: 14, color: LxTheme.textSecondary),
-            label: Text('Copy', style: LxTheme.monoSm),
-          ),
-        ),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(13),
-          decoration: BoxDecoration(
-            color: LxTheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: LxTheme.border),
-          ),
-          child: SelectableText(body, style: LxTheme.mono.copyWith(fontSize: 11.5)),
-        ),
+        for (var i = 0; i < e.journey.length; i++) _traceStep(e, i),
       ],
     );
   }
 
-  Widget _trace(LayerXLogEntry e) {
-    if (e.journey.isEmpty) {
-      return LxKit.emptyState(
-          Icons.route, 'NO TRACE', 'No journey steps were captured for this entry.');
-    }
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-      itemCount: e.journey.length,
-      itemBuilder: (_, i) {
-        final step = e.journey[i];
-        final last = i == e.journey.length - 1;
-        final color =
-            step.type == 'error' ? LxTheme.accentRed : LxTheme.accent;
-        return IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _traceStep(LayerXLogEntry e, int i) {
+    final step = e.journey[i];
+    final last = i == e.journey.length - 1;
+    final color = step.type == 'error' ? LxTheme.accentRed : LxTheme.accent;
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Column(
             children: [
-              Column(
-                children: [
-                  Container(
-                    width: 10,
-                    height: 10,
-                    margin: const EdgeInsets.only(top: 3),
-                    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-                  ),
-                  if (!last)
-                    Expanded(
-                      child: Container(width: 1.5, color: LxTheme.border),
-                    ),
-                ],
+              Container(
+                width: 10,
+                height: 10,
+                margin: const EdgeInsets.only(top: 3),
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: last ? 0 : 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(step.title,
-                          style: LxTheme.bodyPrimary.copyWith(
-                              fontSize: 13, fontWeight: FontWeight.w600)),
-                      if (step.description != null) ...[
-                        const SizedBox(height: 2),
-                        Text(step.description!, style: LxTheme.bodySecondary),
-                      ],
-                      const SizedBox(height: 2),
-                      Text(LxKit.clockTime(step.timestamp),
-                          style: LxTheme.monoSm.copyWith(color: LxTheme.textDim)),
-                    ],
-                  ),
+              if (!last)
+                Expanded(
+                  child: Container(width: 1.5, color: LxTheme.border),
                 ),
-              ),
             ],
           ),
-        );
-      },
+          const SizedBox(width: 12),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: last ? 0 : 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(step.title,
+                      style: LxTheme.bodyPrimary.copyWith(
+                          fontSize: 13, fontWeight: FontWeight.w600)),
+                  if (step.description != null) ...[
+                    const SizedBox(height: 2),
+                    Text(step.description!, style: LxTheme.bodySecondary),
+                  ],
+                  const SizedBox(height: 2),
+                  Text(LxKit.clockTime(step.timestamp),
+                      style: LxTheme.monoSm.copyWith(color: LxTheme.textDim)),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

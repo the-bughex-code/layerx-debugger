@@ -26,8 +26,12 @@ void main() {
     );
     await tester.pumpWidget(
         MaterialApp(home: Scaffold(body: LxInspectorPane(log: e))));
-    await tester.tap(find.text('Response'));
     await tester.pump(const Duration(milliseconds: 300));
+    // The Response tab is gone — the payload copy control now sits inline in
+    // the single-scroll report, so scroll down to it before tapping. The
+    // report ListView is the first Scrollable (SelectableText embeds its own).
+    await tester.scrollUntilVisible(find.text('Copy'), 80,
+        scrollable: find.byType(Scrollable).first);
     await tester.tap(find.text('Copy'));
     await tester.pump();
     expect(find.text(LxCopy.confirmation), findsOneWidget);
