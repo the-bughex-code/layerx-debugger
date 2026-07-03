@@ -106,8 +106,8 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
   }
 
   /// The whole bug report as ONE scroll, in the order a reader needs it:
-  /// verdict → suggestion → details → request → response (+ contract changes)
-  /// → journey → collapsed stack. Empty sections are omitted entirely.
+  /// verdict → suggestion → details → request → response (+ changed-shape
+  /// diff) → journey → collapsed stack. Empty sections are omitted entirely.
   Widget _report(LayerXLogEntry e) {
     final blame = _blameOf(e);
     return ListView(
@@ -164,7 +164,7 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
         ..._payloadSection(
             'WHAT THE SERVER ANSWERED (RESPONSE)', e.responsePayload),
         if (e.responseChanged && e.schemaChanges.isNotEmpty) ...[
-          LxKit.sectionLabel('CONTRACT CHANGES'),
+          LxKit.sectionLabel('RESPONSE CHANGED SHAPE'),
           Container(
             padding: const EdgeInsets.all(13),
             decoration: BoxDecoration(

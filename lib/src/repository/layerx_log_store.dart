@@ -32,13 +32,27 @@ class LayerXLogStore {
           log.level == LayerXLogLevel.fatal)
       .length;
 
+  /// The minimum duration (ms) at which an otherwise-healthy entry is still
+  /// counted as a problem — a slow request, even at success level. Configure
+  /// this to match what "slow" means for your API before the viewer is shown.
+  static int slowRequestThresholdMs = 800;
+
   /// Whether [log] is something a tester would report: an error, fatal,
-  /// warning, or an API response that changed shape.
+  /// warning, an API response that changed shape, or a slow request.
   static bool isProblemEntry(LayerXLogEntry log) =>
       log.level == LayerXLogLevel.error ||
       log.level == LayerXLogLevel.fatal ||
       log.level == LayerXLogLevel.warning ||
-      log.responseChanged;
+      log.responseChanged ||
+      _isSlow(log);
+
+  /// Reads the entry's `duration_ms` extra directly (the store must not
+  /// depend on view-layer helpers) and compares it against
+  /// [slowRequestThresholdMs].
+  static bool _isSlow(LayerXLogEntry log) {
+    final duration = log.extras['duration_ms'];
+    return duration is int && duration >= slowRequestThresholdMs;
+  }
 
   /// The single source of truth for "how many problems are open" — used by the
   /// FAB badge, the header count, and the settings tile.

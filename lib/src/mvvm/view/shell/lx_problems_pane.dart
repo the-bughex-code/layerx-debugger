@@ -24,14 +24,17 @@ class LxProblemsPane extends StatelessWidget {
   });
 
   /// The minimum duration (ms) at which an otherwise-healthy entry is still
-  /// surfaced as a problem — a slow request, even at success level.
-  static const int slowThresholdMs = 800;
+  /// surfaced as a problem — a slow request, even at success level. Delegates
+  /// to [LayerXLogStore.slowRequestThresholdMs] so there is one knob for the
+  /// whole viewer (inbox, badge, header, and settings tile all agree).
+  static int get slowThresholdMs => LayerXLogStore.slowRequestThresholdMs;
 
-  /// The union of [LayerXLogStore.isProblemEntry] and the slow-request rule,
-  /// sorted worst-first (fatal & error → warning → responseChanged-only →
-  /// slow-only), ties broken by newest timestamp first.
+  /// [LayerXLogStore.isProblemEntry] already includes the slow-request rule,
+  /// so membership here is just that predicate. Sorted worst-first (fatal &
+  /// error → warning → responseChanged-only → slow-only), ties broken by
+  /// newest timestamp first.
   static List<LayerXLogEntry> problemsOf(List<LayerXLogEntry> logs) {
-    final rows = logs.where(_isProblemRow).toList()
+    final rows = logs.where(LayerXLogStore.isProblemEntry).toList()
       ..sort((a, b) {
         final rankCompare = _rankOf(a).compareTo(_rankOf(b));
         if (rankCompare != 0) return rankCompare;
@@ -40,13 +43,20 @@ class LxProblemsPane extends StatelessWidget {
     return rows;
   }
 
-  static bool _isProblemRow(LayerXLogEntry e) =>
-      LayerXLogStore.isProblemEntry(e) || _isSlow(e);
-
   static bool _isSlow(LayerXLogEntry e) {
     final duration = LxKit.durationOf(e);
     return duration != null && duration >= slowThresholdMs;
   }
+
+  /// Whether [e] is a problem for a reason other than the slow-request rule
+  /// (level or a changed response). [LayerXLogStore.isProblemEntry] now
+  /// folds the slow rule in, so this checks the non-slow conditions directly
+  /// rather than re-testing the same entry's own membership.
+  static bool _isProblemByLevelOrChange(LayerXLogEntry e) =>
+      e.level == LayerXLogLevel.error ||
+      e.level == LayerXLogLevel.fatal ||
+      e.level == LayerXLogLevel.warning ||
+      e.responseChanged;
 
   /// Lower rank sorts first (worse-first): fatal & error → warning →
   /// responseChanged-only → slow-only.
@@ -55,7 +65,7 @@ class LxProblemsPane extends StatelessWidget {
       return 0;
     }
     if (e.level == LayerXLogLevel.warning) return 1;
-    if (LayerXLogStore.isProblemEntry(e)) {
+    if (_isProblemByLevelOrChange(e)) {
       // Not fatal/error/warning but still a problem: responseChanged.
       return 2;
     }
@@ -97,7 +107,7 @@ class LxProblemsPane extends StatelessWidget {
   Widget _problemRow(LayerXLogEntry e) {
     final rail = e.level.color;
     final duration = LxKit.durationOf(e);
-    final isSlowOnly = !LayerXLogStore.isProblemEntry(e) && _isSlow(e);
+    final isSlowOnly = !_isProblemByLevelOrChange(e) && _isSlow(e);
     final isFatal = e.level == LayerXLogLevel.fatal;
     final blame = _blameOf(e);
     final meta = [

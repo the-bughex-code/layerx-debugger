@@ -117,7 +117,7 @@ class LxDashboardPane extends StatelessWidget {
     final parts = <String>[
       if (errors > 0) '$errors error${errors == 1 ? '' : 's'}',
       if (warnings > 0) '$warnings warning${warnings == 1 ? '' : 's'}',
-      if (schemaChanges > 0) '$schemaChanges contract change${schemaChanges == 1 ? '' : 's'}',
+      if (schemaChanges > 0) '$schemaChanges response change${schemaChanges == 1 ? '' : 's'}',
     ];
 
     return Container(
@@ -185,7 +185,7 @@ class LxDashboardPane extends StatelessWidget {
       _Metric('ERRORS', '$errors', errors > 0 ? LxTheme.accentRed : LxTheme.textPrimary),
       _Metric('AVG LATENCY', avgLatency == 0 ? '—' : '${avgLatency}ms',
           LxTheme.accent),
-      _Metric('SCHEMA Δ', '$schema', schema > 0 ? LxTheme.accentOrange : LxTheme.textPrimary),
+      _Metric('CHANGED', '$schema', schema > 0 ? LxTheme.accentOrange : LxTheme.textPrimary),
     ];
     // Content-sized rows (not a fixed-aspect grid) so the cards never overflow
     // on narrow screens.
@@ -295,7 +295,7 @@ class LxDashboardPane extends StatelessWidget {
         ? Icons.published_with_changes
         : LxKit.levelIcon(e.level);
     final title = e.responseChanged
-        ? 'Response contract changed'
+        ? 'Response changed shape'
         : (LxKit.isNetwork(e)
             ? '${e.statusCode ?? ''} · ${LxKit.shortPath(e.endpoint)}'
             : e.message.split('\n').first);

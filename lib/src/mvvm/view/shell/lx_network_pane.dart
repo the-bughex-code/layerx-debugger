@@ -177,7 +177,7 @@ class _LxNetworkPaneState extends State<LxNetworkPane> {
             chip('All', _NetFilter.all),
             chip('Errors', _NetFilter.errors),
             chip('Slow', _NetFilter.slow),
-            chip('Δ Changed', _NetFilter.changed),
+            chip('Changed', _NetFilter.changed),
           ],
         ),
       ),
@@ -217,7 +217,7 @@ class _LxNetworkPaneState extends State<LxNetworkPane> {
           ),
           const SizedBox(width: 8),
           Text(
-            '${e.statusCode ?? '—'}${e.responseChanged ? 'Δ' : ''}',
+            '${e.statusCode ?? '—'}',
             style: TextStyle(
                 color: e.responseChanged ? LxTheme.accentOrange : sColor,
                 fontSize: 11,
