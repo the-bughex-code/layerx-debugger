@@ -36,8 +36,9 @@ LayerXLogEntry _entry(
     );
 
 /// Delivers [total] as a run of small discrete frames rather than one jump —
-/// the shell's blinking cursor repeats forever, so `pumpAndSettle` would hang,
-/// and a single large pump can leave a route transition mid-composite.
+/// a single large pump can leave a route transition mid-composite, so
+/// stepping through smaller frames lets each transition actually reach and
+/// paint its terminal frame.
 Future<void> _pumpFrames(WidgetTester tester, Duration total) async {
   const step = Duration(milliseconds: 20);
   var elapsed = Duration.zero;

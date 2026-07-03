@@ -221,8 +221,6 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
   PreferredSizeWidget _appBar(BuildContext context, int openProblemCount) {
     final statusColor =
         openProblemCount > 0 ? LxTheme.accentRed : LxTheme.accentGreen;
-    final path =
-        _segment == _LxSegment.problems ? 'problems' : 'everything';
     return AppBar(
       backgroundColor: LxTheme.surface,
       elevation: 0,
@@ -255,41 +253,35 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
             ),
           ),
           const SizedBox(width: 10),
-          Flexible(
-            child: RichText(
+          // Flexible (not a bare Text) so the title can never overflow a
+          // 320px-wide screen either — flex 2 vs. the count's flex 1 means
+          // the count shrinks first when both compete for space.
+          const Flexible(
+            flex: 2,
+            child: Text(
+              'Debugger',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              text: TextSpan(
-                style: const TextStyle(
-                    fontFamily: 'monospace', fontSize: 12.5, height: 1.2),
-                children: [
-                  const TextSpan(
-                      text: 'layerx',
-                      style: TextStyle(
-                          color: LxTheme.accent, fontWeight: FontWeight.w700)),
-                  const TextSpan(
-                      text: '@dbg ',
-                      style: TextStyle(color: LxTheme.textSecondary)),
-                  TextSpan(
-                      text: '~/$path ',
-                      style: const TextStyle(color: LxTheme.accentCyan)),
-                  const TextSpan(
-                      text: r'$ ',
-                      style: TextStyle(color: LxTheme.textSecondary)),
-                  TextSpan(
-                      text: '$openProblemCount',
-                      style: const TextStyle(
-                          color: LxTheme.textPrimary,
-                          fontWeight: FontWeight.w700)),
-                  const TextSpan(
-                      text: ' problems',
-                      style: TextStyle(color: LxTheme.textSecondary)),
-                ],
+              // §4.3 `titleM` — sans app-bar title (matches
+              // LxTheme.appBarTheme's titleTextStyle; no shell prompt, no
+              // monospace).
+              style: TextStyle(
+                color: LxTheme.textPrimary,
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                height: 1.3,
               ),
             ),
           ),
-          const SizedBox(width: 6),
-          const _LxBlinkingCursor(),
+          const SizedBox(width: 10),
+          Flexible(
+            child: Text(
+              '$openProblemCount problems',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: LxTheme.caption,
+            ),
+          ),
         ],
       ),
       actions: [
@@ -469,49 +461,4 @@ class _LxDetailScreenState extends State<_LxDetailScreen> {
       ),
     );
   }
-}
-
-/// A small blinking block cursor that gives the header its live-terminal feel.
-class _LxBlinkingCursor extends StatefulWidget {
-  const _LxBlinkingCursor();
-
-  @override
-  State<_LxBlinkingCursor> createState() => _LxBlinkingCursorState();
-}
-
-class _LxBlinkingCursorState extends State<_LxBlinkingCursor>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1000),
-  )..repeat();
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _ctrl.drive(_BlinkTween()),
-      child: Container(
-        width: 7,
-        height: 15,
-        decoration: BoxDecoration(
-          color: LxTheme.accent,
-          borderRadius: BorderRadius.circular(1),
-          boxShadow: LxTheme.glowShadow(LxTheme.accent, spread: 3),
-        ),
-      ),
-    );
-  }
-}
-
-/// Square-wave opacity: solid for the first half of the cycle, hidden for the
-/// second — a classic terminal cursor blink rather than a smooth fade.
-class _BlinkTween extends Animatable<double> {
-  @override
-  double transform(double t) => t < 0.5 ? 1.0 : 0.0;
 }

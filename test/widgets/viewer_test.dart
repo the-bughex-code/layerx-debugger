@@ -68,8 +68,6 @@ void main() {
     LayerXLog.i('hello viewer');
 
     await tester.pumpWidget(const MaterialApp(home: LxDebuggerShell()));
-    // The header's blinking cursor repeats forever, so pumpAndSettle would
-    // never return — advance time with fixed pumps instead.
     await tester.pump(const Duration(milliseconds: 400));
 
     // An info log is not a problem, so it lives behind the Everything

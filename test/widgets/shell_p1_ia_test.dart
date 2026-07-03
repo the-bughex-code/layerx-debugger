@@ -18,13 +18,12 @@ LayerXLogEntry _entry(String id,
 
 /// Delivers [total] as a run of small discrete frames rather than one jump.
 ///
-/// The shell's blinking-cursor ticker repeats forever, so `pumpAndSettle` is
-/// never usable here — but a single large `pump(Duration)` can also leave a
-/// route transition (a pushed detail route, the overflow `PopupMenuButton`'s
-/// route) mid-composite: the animation clock advances past the end, yet the
-/// last frame's layer tree isn't repainted, so hit-testing still sees the
-/// route's barrier on top of the content. Stepping through smaller frames lets
-/// each transition actually reach and paint its terminal frame.
+/// A single large `pump(Duration)` can leave a route transition (a pushed
+/// detail route, the overflow `PopupMenuButton`'s route) mid-composite: the
+/// animation clock advances past the end, yet the last frame's layer tree
+/// isn't repainted, so hit-testing still sees the route's barrier on top of
+/// the content. Stepping through smaller frames lets each transition actually
+/// reach and paint its terminal frame.
 Future<void> _pumpFrames(WidgetTester tester, Duration total) async {
   const step = Duration(milliseconds: 20);
   var elapsed = Duration.zero;
@@ -55,6 +54,12 @@ void main() {
       expect(find.text(label), findsNothing,
           reason: "old nav label '$label' should not render");
     }
+
+    // UX P3 Task B: the header is plain — a "Debugger" title and an honest
+    // problem count, no shell-prompt cosplay.
+    expect(find.text('Debugger'), findsOneWidget);
+    expect(find.textContaining('problems'), findsOneWidget);
+    expect(find.textContaining('@dbg'), findsNothing);
   });
 
   testWidgets('Everything shows the Console pane; Problems returns',
