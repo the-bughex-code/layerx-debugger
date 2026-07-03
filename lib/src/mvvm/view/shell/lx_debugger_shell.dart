@@ -11,6 +11,7 @@ import 'package:layerx_debugger/src/mvvm/view/shell/lx_everything_pane.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_inspector_pane.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_problems_pane.dart';
 import 'package:layerx_debugger/src/repository/layerx_log_store.dart';
+import 'package:layerx_debugger/src/repository/layerx_report_formatter.dart';
 
 enum _LxSegment { problems, everything }
 
@@ -45,29 +46,20 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
   void _inspect(LayerXLogEntry log) {
     // Kept for compat: other parts of the viewer observe the selection.
     LayerXViewerState.selected.value = log;
+
+    // Walk the CURRENT ranked problem list when the tapped entry is part of
+    // it, so Prev/Next steps through what the tester is actually triaging.
+    // Non-problem rows (opened from Everything/Console) get a single-entry
+    // list, so both chevrons render disabled.
+    final displayLogs = _paused ? (_frozen ?? LayerXLogStore.logs) : LayerXLogStore.logs;
+    final problems = LxProblemsPane.problemsOf(displayLogs);
+    final indexInProblems = problems.indexWhere((e) => e.id == log.id);
+    final list = indexInProblems >= 0 ? problems : [log];
+    final startIndex = indexInProblems >= 0 ? indexInProblems : 0;
+
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => Scaffold(
-          backgroundColor: LxTheme.bg,
-          appBar: AppBar(
-            backgroundColor: LxTheme.surface,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            surfaceTintColor: Colors.transparent,
-            iconTheme:
-                const IconThemeData(color: LxTheme.textSecondary, size: 20),
-            title: Text(
-              'Details',
-              style: LxTheme.bodyPrimary
-                  .copyWith(fontSize: 14, fontWeight: FontWeight.w700),
-            ),
-            bottom: const PreferredSize(
-              preferredSize: Size.fromHeight(1),
-              child: Divider(height: 1, thickness: 1, color: LxTheme.border),
-            ),
-          ),
-          body: LxInspectorPane(log: log),
-        ),
+        builder: (_) => _LxDetailScreen(problems: list, startIndex: startIndex),
       ),
     );
   }
@@ -337,6 +329,95 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
           onPressed: () => LayerXLogStore.restore(snapshot),
         ),
       ));
+  }
+}
+
+/// The pushed Details route: an immutable snapshot of the ranked problem
+/// list (or a single non-problem entry) plus the tapped index, so Prev/Next
+/// can walk it without depending on the shell's live, possibly-paused state.
+class _LxDetailScreen extends StatefulWidget {
+  final List<LayerXLogEntry> problems;
+  final int startIndex;
+
+  const _LxDetailScreen({required this.problems, required this.startIndex});
+
+  @override
+  State<_LxDetailScreen> createState() => _LxDetailScreenState();
+}
+
+class _LxDetailScreenState extends State<_LxDetailScreen> {
+  late int _index = widget.startIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    final entry = widget.problems[_index];
+    final total = widget.problems.length;
+
+    return Scaffold(
+      backgroundColor: LxTheme.bg,
+      appBar: AppBar(
+        backgroundColor: LxTheme.surface,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        iconTheme: const IconThemeData(color: LxTheme.textSecondary, size: 20),
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Text(
+              'Details',
+              style: LxTheme.bodyPrimary
+                  .copyWith(fontSize: 14, fontWeight: FontWeight.w700),
+            ),
+            if (total > 1) ...[
+              const SizedBox(width: 8),
+              Text(
+                '${_index + 1} of $total',
+                style: LxTheme.monoSm.copyWith(color: LxTheme.textSecondary),
+              ),
+            ],
+          ],
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, thickness: 1, color: LxTheme.border),
+        ),
+      ),
+      body: LxInspectorPane(log: entry),
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+          decoration: const BoxDecoration(
+            color: LxTheme.surface,
+            border: Border(top: BorderSide(color: LxTheme.border)),
+          ),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left),
+                tooltip: 'Previous problem',
+                onPressed: _index > 0 ? () => setState(() => _index--) : null,
+              ),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () => LxCopy.copy(
+                      context, LayerXReportFormatter.formatIssue(entry)),
+                  icon: const Icon(Icons.copy_all_outlined, size: 18),
+                  label: const Text('Copy bug report'),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.chevron_right),
+                tooltip: 'Next problem',
+                onPressed:
+                    _index < total - 1 ? () => setState(() => _index++) : null,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
