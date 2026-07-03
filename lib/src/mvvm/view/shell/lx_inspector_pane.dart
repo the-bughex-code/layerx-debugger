@@ -267,7 +267,7 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
         children: [
           SizedBox(
             width: 96,
-            child: Text(k, style: LxTheme.monoSm),
+            child: Text(k, style: LxTheme.caption),
           ),
           Expanded(
             child: Text(v,
@@ -289,7 +289,7 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
           TextButton.icon(
             onPressed: () => LxCopy.copy(context, body),
             icon: const Icon(Icons.copy, size: 14, color: LxTheme.textSecondary),
-            label: Text('Copy', style: LxTheme.monoSm),
+            label: Text('Copy', style: LxTheme.bodySecondary),
           ),
         ],
       ),
@@ -396,7 +396,7 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
                   ],
                   const SizedBox(height: 2),
                   Text(LxKit.clockTime(step.timestamp),
-                      style: LxTheme.monoSm.copyWith(color: LxTheme.textDim)),
+                      style: LxTheme.caption),
                 ],
               ),
             ),

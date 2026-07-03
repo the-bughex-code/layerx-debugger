@@ -121,8 +121,7 @@ class _LxConsolePaneState extends State<LxConsolePane> {
                       decoration: InputDecoration(
                         isCollapsed: true,
                         hintText: 'search logs…',
-                        hintStyle:
-                            LxTheme.monoSm.copyWith(color: LxTheme.textDim),
+                        hintStyle: LxTheme.caption,
                         border: InputBorder.none,
                       ),
                       onChanged: (v) => setState(() => _query = v),
@@ -200,7 +199,7 @@ class _LxConsolePaneState extends State<LxConsolePane> {
                       active ? color.withValues(alpha: 0.45) : Colors.transparent),
             ),
             child: Text(label,
-                style: LxTheme.monoSm.copyWith(
+                style: LxTheme.caption.copyWith(
                     color: active ? color : LxTheme.textSecondary)),
           ),
         ),
@@ -266,7 +265,7 @@ class _LxConsolePaneState extends State<LxConsolePane> {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  Text(meta, style: LxTheme.monoSm.copyWith(color: LxTheme.textDim)),
+                  Text(meta, style: LxTheme.caption),
                 ],
               ),
             ),

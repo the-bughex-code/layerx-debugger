@@ -69,7 +69,7 @@ class _LxEverythingPaneState extends State<LxEverythingPane> {
             ),
             child: Text(
               label,
-              style: LxTheme.monoSm.copyWith(
+              style: LxTheme.caption.copyWith(
                 color: active ? LxTheme.textPrimary : LxTheme.textSecondary,
               ),
             ),

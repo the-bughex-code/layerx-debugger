@@ -153,7 +153,9 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
           ),
           child: Text(
             label,
-            style: LxTheme.monoSm.copyWith(
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: LxTheme.bodySecondary.copyWith(
                 color: active ? LxTheme.textPrimary : LxTheme.textSecondary),
           ),
         ),
@@ -164,8 +166,10 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
       child: Row(
         children: [
-          segment('Problems', _LxSegment.problems),
-          segment('Everything', _LxSegment.everything),
+          // Flexible so the sans labels (§4.3 `label`, larger than the old
+          // 10px mono) can never overflow a 320px-wide screen.
+          Flexible(child: segment('Problems', _LxSegment.problems)),
+          Flexible(child: segment('Everything', _LxSegment.everything)),
         ],
       ),
     );
@@ -195,7 +199,7 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
               'Paused — new activity is hidden until you resume',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: LxTheme.monoSm.copyWith(color: LxTheme.accentAmber),
+              style: LxTheme.caption.copyWith(color: LxTheme.accentAmber),
             ),
           ),
           TextButton(
@@ -418,7 +422,7 @@ class _LxDetailScreenState extends State<_LxDetailScreen> {
               const SizedBox(width: 8),
               Text(
                 '${_index + 1} of $total',
-                style: LxTheme.monoSm.copyWith(color: LxTheme.textSecondary),
+                style: LxTheme.caption.copyWith(color: LxTheme.textSecondary),
               ),
             ],
           ],

@@ -206,7 +206,7 @@ abstract final class LxKit {
               'Showing $shown of $total',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: LxTheme.monoSm,
+              style: LxTheme.caption,
             ),
           ),
           TextButton(

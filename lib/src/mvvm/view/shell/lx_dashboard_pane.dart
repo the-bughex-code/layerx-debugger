@@ -63,7 +63,7 @@ class LxDashboardPane extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 4),
           child: Text(
             'Developer metric — problems above are what matter',
-            style: LxTheme.monoSm.copyWith(color: LxTheme.textDim),
+            style: LxTheme.caption,
           ),
         ),
         const SizedBox(height: 12),
@@ -224,7 +224,7 @@ class LxDashboardPane extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(m.label,
-              style: LxTheme.monoSm, maxLines: 1, overflow: TextOverflow.ellipsis),
+              style: LxTheme.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
           const SizedBox(height: 4),
           Text(
             m.value,
@@ -333,7 +333,7 @@ class LxDashboardPane extends StatelessWidget {
                         Text(sub,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: LxTheme.monoSm),
+                            style: LxTheme.caption),
                       ],
                     ],
                   ),

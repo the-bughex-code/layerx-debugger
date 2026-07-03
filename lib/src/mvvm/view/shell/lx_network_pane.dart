@@ -131,7 +131,7 @@ class _LxNetworkPaneState extends State<LxNetworkPane> {
                 decoration: InputDecoration(
                   isCollapsed: true,
                   hintText: 'filter endpoints…',
-                  hintStyle: LxTheme.monoSm.copyWith(color: LxTheme.textDim),
+                  hintStyle: LxTheme.caption,
                   border: InputBorder.none,
                 ),
                 onChanged: (v) => setState(() => _query = v),
@@ -160,7 +160,7 @@ class _LxNetworkPaneState extends State<LxNetworkPane> {
             ),
             child: Text(
               label,
-              style: LxTheme.monoSm.copyWith(
+              style: LxTheme.caption.copyWith(
                 color: active ? LxTheme.textPrimary : LxTheme.textSecondary,
               ),
             ),
