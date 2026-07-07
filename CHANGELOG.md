@@ -5,6 +5,19 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.8.0
+
+### Changed
+
+- **UX P3: calm, readable, accessible.** The Neo-Terminal skin is retired: a
+  neutral high-contrast dark palette where every load-bearing text token meets
+  WCAG AA (≥4.5:1) — enforced by a contrast unit test — with crashes/fatals as
+  the most prominent color in the system. The shell prompt and blinking cursor
+  are gone (plain "Debugger" title + honest problem count), monospace is
+  reserved for payloads and stack traces, cards/pills/snackbars have visible
+  edges, the floating button is now a labeled **"Report a bug"** pill, and the
+  edge-swipe affordance is a visible handle.
+
 ## 1.7.0
 
 ### Changed

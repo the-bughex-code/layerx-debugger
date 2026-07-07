@@ -203,13 +203,18 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(blame.icon, color: blame.color, size: 18),
+              // AA fix: blame.color carries light-background Material
+              // shades that fall below 4.5:1 on the dark surfaces, so the
+              // load-bearing verdict renders in theme tokens instead (the
+              // engine palette itself is remapped in UX P4).
+              Icon(blame.icon, color: LxTheme.textSecondary, size: 18),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   blame.responsibleParty,
                   style: LxTheme.bodyPrimary.copyWith(
-                      fontWeight: FontWeight.w700, color: blame.color),
+                      fontWeight: FontWeight.w700,
+                      color: LxTheme.textPrimary),
                 ),
               ),
             ],
