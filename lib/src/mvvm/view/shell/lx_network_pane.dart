@@ -148,7 +148,9 @@ class _LxNetworkPaneState extends State<LxNetworkPane> {
       final active = _filter == f;
       return Padding(
         padding: const EdgeInsets.only(right: 8),
-        child: GestureDetector(
+        child: LxKit.tapTarget(
+          label: label,
+          selected: active,
           onTap: () => setState(() => _filter = f),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

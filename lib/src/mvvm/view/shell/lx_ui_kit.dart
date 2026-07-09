@@ -89,6 +89,45 @@ abstract final class LxKit {
   }
 
   // ── Reusable widgets ─────────────────────────────────────────────────────────
+
+  /// Wraps a small visual [child] (a chip, a tiny glyph button) in an
+  /// accessible tap target: an opaque gesture surface at least [minSize]
+  /// logical pixels in each axis, annotated for screen readers as a button
+  /// (optionally [selected]) carrying [label].
+  ///
+  /// The visible [child] keeps its own small size — only the invisible hit
+  /// area grows to the ≥48dp a11y floor, so chips never balloon. The child's
+  /// own semantics are excluded so [label] is the single, authoritative label
+  /// the reader announces (a chip's inner `Text` would otherwise duplicate it).
+  static Widget tapTarget({
+    required Widget child,
+    required VoidCallback onTap,
+    required String label,
+    bool? selected,
+    double minSize = 48,
+  }) {
+    return Semantics(
+      // container: true forces this to emit its own node — the child's
+      // semantics are excluded, so without it the [label] would have nothing
+      // to attach to and would be dropped.
+      container: true,
+      button: true,
+      selected: selected,
+      label: label,
+      onTap: onTap,
+      child: ExcludeSemantics(
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minWidth: minSize, minHeight: minSize),
+            child: Center(widthFactor: 1, heightFactor: 1, child: child),
+          ),
+        ),
+      ),
+    );
+  }
+
   static Widget sectionLabel(String text) => Padding(
         padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
         child: Text(text, style: LxTheme.sectionLabel),

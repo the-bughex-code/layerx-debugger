@@ -140,13 +140,21 @@ class _LxConsolePaneState extends State<LxConsolePane> {
 
   Widget _levelMenu() {
     return Container(
-      height: 38,
-      width: 42,
+      // ≥48dp a11y floor: a plain 48×48 box tightly sizes the inner
+      // PopupMenuButton's IconButton to a real 48×48 tap target (the glyph
+      // stays 18dp). The border lives in foregroundDecoration so it paints
+      // OVER the child rather than insetting it to 46 — the search field keeps
+      // its 38dp height and stays vertically centered as the row grows to 48.
+      height: 48,
+      width: 48,
       decoration: BoxDecoration(
         color: LxTheme.surface,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-            color: _level == null ? LxTheme.border : LxTheme.accent),
+      ),
+      foregroundDecoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border:
+            Border.all(color: _level == null ? LxTheme.border : LxTheme.accent),
       ),
       child: PopupMenuButton<LayerXLogLevel?>(
         tooltip: 'Filter by level',
@@ -166,8 +174,8 @@ class _LxConsolePaneState extends State<LxConsolePane> {
                   Container(
                       width: 8,
                       height: 8,
-                      decoration:
-                          BoxDecoration(color: l.color, shape: BoxShape.circle)),
+                      decoration: BoxDecoration(
+                          color: l.color, shape: BoxShape.circle)),
                   const SizedBox(width: 8),
                   Text(l.label),
                 ],
@@ -179,37 +187,44 @@ class _LxConsolePaneState extends State<LxConsolePane> {
   }
 
   Widget _categoryChips() {
-    final present = <LayerXLogCategory>{for (final e in widget.logs) e.category};
-    final ordered =
-        LayerXLogCategory.values.where(present.contains).toList();
+    final present = <LayerXLogCategory>{
+      for (final e in widget.logs) e.category
+    };
+    final ordered = LayerXLogCategory.values.where(present.contains).toList();
 
     Widget chip(String label, LayerXLogCategory? c, Color color) {
       final active = _category == c;
       return Padding(
         padding: const EdgeInsets.only(right: 8),
-        child: GestureDetector(
+        child: LxKit.tapTarget(
+          label: label,
+          selected: active,
           onTap: () => setState(() => _category = c),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: active ? color.withValues(alpha: 0.14) : Colors.transparent,
+              color:
+                  active ? color.withValues(alpha: 0.14) : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                  color:
-                      active ? color.withValues(alpha: 0.45) : Colors.transparent),
+                  color: active
+                      ? color.withValues(alpha: 0.45)
+                      : Colors.transparent),
             ),
             child: Text(label,
-                style: LxTheme.caption.copyWith(
-                    color: active ? color : LxTheme.textSecondary)),
+                style: LxTheme.caption
+                    .copyWith(color: active ? color : LxTheme.textSecondary)),
           ),
         ),
       );
     }
 
     return Container(
-      height: 36,
+      // ≥48dp tall so each chip's accessible hit area fits without clipping;
+      // the visible chip keeps its own small size, centered within.
+      height: 48,
       alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.only(left: 16, bottom: 6),
+      padding: const EdgeInsets.only(left: 16),
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
@@ -270,13 +285,11 @@ class _LxConsolePaneState extends State<LxConsolePane> {
                 ],
               ),
             ),
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
+            // ≥48dp tap target around the 14dp glyph, labeled for readers.
+            LxKit.tapTarget(
+              label: 'Copy this log',
               onTap: () => LxCopy.copy(context, LxKit.copySummary(e)),
-              child: const Padding(
-                padding: EdgeInsets.only(left: 8, top: 2),
-                child: Icon(Icons.copy, size: 14, color: LxTheme.textDim),
-              ),
+              child: const Icon(Icons.copy, size: 14, color: LxTheme.textDim),
             ),
           ],
         ),

@@ -7,6 +7,7 @@ import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_console_pane.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_dashboard_pane.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_network_pane.dart';
+import 'package:layerx_debugger/src/mvvm/view/shell/lx_ui_kit.dart';
 
 enum _EverythingTab { console, network, dashboard }
 
@@ -47,8 +48,7 @@ class _LxEverythingPaneState extends State<LxEverythingPane> {
       case _EverythingTab.network:
         return LxNetworkPane(logs: widget.logs, onInspect: widget.onInspect);
       case _EverythingTab.dashboard:
-        return LxDashboardPane(
-            logs: widget.logs, onInspect: widget.onInspect);
+        return LxDashboardPane(logs: widget.logs, onInspect: widget.onInspect);
     }
   }
 
@@ -57,7 +57,9 @@ class _LxEverythingPaneState extends State<LxEverythingPane> {
       final active = _tab == tab;
       return Padding(
         padding: const EdgeInsets.only(right: 8),
-        child: GestureDetector(
+        child: LxKit.tapTarget(
+          label: label,
+          selected: active,
           onTap: () => setState(() => _tab = tab),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -79,11 +81,11 @@ class _LxEverythingPaneState extends State<LxEverythingPane> {
     }
 
     return Container(
-      // 36 - 6 bottom padding leaves 30px for the ~28px chips; symmetric
-      // vertical padding would clip the labels (matches LxConsolePane's row).
-      height: 36,
+      // ≥48dp tall so each chip's accessible hit area fits without clipping;
+      // the visible chip keeps its own small size, centered within.
+      height: 48,
       alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.only(left: 16, bottom: 6),
+      padding: const EdgeInsets.only(left: 16),
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [

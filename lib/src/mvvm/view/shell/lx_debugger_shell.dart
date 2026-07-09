@@ -10,6 +10,7 @@ import 'package:layerx_debugger/src/mvvm/view/shell/lx_copy.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_everything_pane.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_inspector_pane.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_problems_pane.dart';
+import 'package:layerx_debugger/src/mvvm/view/shell/lx_ui_kit.dart';
 import 'package:layerx_debugger/src/repository/layerx_log_store.dart';
 import 'package:layerx_debugger/src/repository/layerx_report_formatter.dart';
 
@@ -51,7 +52,8 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
     // it, so Prev/Next steps through what the tester is actually triaging.
     // Non-problem rows (opened from Everything/Console) get a single-entry
     // list, so both chevrons render disabled.
-    final displayLogs = _paused ? (_frozen ?? LayerXLogStore.logs) : LayerXLogStore.logs;
+    final displayLogs =
+        _paused ? (_frozen ?? LayerXLogStore.logs) : LayerXLogStore.logs;
     final problems = LxProblemsPane.problemsOf(displayLogs);
     final indexInProblems = problems.indexWhere((e) => e.id == log.id);
     final list = indexInProblems >= 0 ? problems : [log];
@@ -67,8 +69,7 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
   void _togglePaused() {
     setState(() {
       _paused = !_paused;
-      _frozen =
-          _paused ? List<LayerXLogEntry>.from(LayerXLogStore.logs) : null;
+      _frozen = _paused ? List<LayerXLogEntry>.from(LayerXLogStore.logs) : null;
     });
   }
 
@@ -140,7 +141,11 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
   Widget _segmentBar() {
     Widget segment(String label, _LxSegment value) {
       final active = _segment == value;
-      return GestureDetector(
+      // §a11y: the visible chip is unchanged, but a transparent ≥48dp hit
+      // area wraps it and it announces as a selected/unselected button.
+      return LxKit.tapTarget(
+        label: label,
+        selected: active,
         onTap: () => setState(() => _segment = value),
         child: Container(
           margin: const EdgeInsets.only(right: 8),
@@ -286,12 +291,18 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.copy_all_outlined, size: 20),
-          tooltip: 'Export all',
+          // A tooltip only sets the `tooltip` semantics property (not `label`),
+          // so an explicit `semanticLabel` is what a reader announces and what
+          // find.bySemanticsLabel resolves. Default IconButton hit area is 48².
+          icon: const Icon(Icons.copy_all_outlined,
+              size: 20, semanticLabel: 'Copy full report'),
+          tooltip: 'Copy full report',
           onPressed: () => LxCopy.copyExport(context),
         ),
         PopupMenuButton<String>(
-          icon: const Icon(Icons.more_vert, size: 20),
+          icon: const Icon(Icons.more_vert,
+              size: 20, semanticLabel: 'More options'),
+          tooltip: 'More options',
           color: LxTheme.surfaceHigh,
           onSelected: (v) {
             if (v == 'pause') _togglePaused();
@@ -300,8 +311,8 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
           itemBuilder: (_) => [
             PopupMenuItem(
               value: 'pause',
-              child: Text(
-                  _paused ? 'Resume live updates' : 'Pause live updates'),
+              child:
+                  Text(_paused ? 'Resume live updates' : 'Pause live updates'),
             ),
             const PopupMenuItem(
                 value: 'new-session', child: Text('Start a new session')),
@@ -437,7 +448,8 @@ class _LxDetailScreenState extends State<_LxDetailScreen> {
           child: Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.chevron_left),
+                icon: const Icon(Icons.chevron_left,
+                    semanticLabel: 'Previous problem'),
                 tooltip: 'Previous problem',
                 onPressed: _index > 0 ? () => setState(() => _index--) : null,
               ),
@@ -450,7 +462,8 @@ class _LxDetailScreenState extends State<_LxDetailScreen> {
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.chevron_right),
+                icon: const Icon(Icons.chevron_right,
+                    semanticLabel: 'Next problem'),
                 tooltip: 'Next problem',
                 onPressed:
                     _index < total - 1 ? () => setState(() => _index++) : null,

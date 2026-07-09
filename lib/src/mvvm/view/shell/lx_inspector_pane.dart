@@ -97,7 +97,8 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
               child: Text(e.message.split('\n').first,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: LxTheme.bodyPrimary.copyWith(fontWeight: FontWeight.w700)),
+                  style: LxTheme.bodyPrimary
+                      .copyWith(fontWeight: FontWeight.w700)),
             ),
           ],
         ],
@@ -125,7 +126,8 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
             decoration: BoxDecoration(
               color: LxTheme.surface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: LxTheme.accentAmber.withValues(alpha: 0.35)),
+              border: Border.all(
+                  color: LxTheme.accentAmber.withValues(alpha: 0.35)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -153,16 +155,18 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
         if (e.errorCode != null) _kv('Error code', e.errorCode!),
         if (e.controllerName != null) _kv('Controller', e.controllerName!),
         if (e.screenName != null) _kv('Screen', e.screenName!),
-        if (LxKit.durationOf(e) != null) _kv('Duration', '${LxKit.durationOf(e)}ms'),
+        if (LxKit.durationOf(e) != null)
+          _kv('Duration', '${LxKit.durationOf(e)}ms'),
         _kv(
             'Time',
             '${LayerXReportFormatter.relativeTime(e.timestamp)} · '
                 '${LxKit.clockTime(e.timestamp)}'),
         if (e.occurrenceCount > 1) _kv('Occurrences', '×${e.occurrenceCount}'),
         const SizedBox(height: 14),
-        ..._payloadSection('WHAT THE APP SENT (REQUEST)', e.requestPayload),
         ..._payloadSection(
-            'WHAT THE SERVER ANSWERED (RESPONSE)', e.responsePayload),
+            'WHAT THE APP SENT (REQUEST)', e.requestPayload, 'Copy request'),
+        ..._payloadSection('WHAT THE SERVER ANSWERED (RESPONSE)',
+            e.responsePayload, 'Copy response'),
         if (e.responseChanged && e.schemaChanges.isNotEmpty) ...[
           LxKit.sectionLabel('RESPONSE CHANGED SHAPE'),
           Container(
@@ -213,8 +217,7 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
                 child: Text(
                   blame.responsibleParty,
                   style: LxTheme.bodyPrimary.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: LxTheme.textPrimary),
+                      fontWeight: FontWeight.w700, color: LxTheme.textPrimary),
                 ),
               ),
             ],
@@ -276,7 +279,8 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
           ),
           Expanded(
             child: Text(v,
-                style: LxTheme.bodySecondary.copyWith(color: LxTheme.textPrimary)),
+                style:
+                    LxTheme.bodySecondary.copyWith(color: LxTheme.textPrimary)),
           ),
         ],
       ),
@@ -285,16 +289,26 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
 
   /// A payload section (request or response). Empty payloads are omitted
   /// entirely — no empty-state placeholder.
-  List<Widget> _payloadSection(String label, String? body) {
+  List<Widget> _payloadSection(String label, String? body, String copyLabel) {
     if (body == null || body.trim().isEmpty) return const [];
     return [
       Row(
         children: [
           Expanded(child: LxKit.sectionLabel(label)),
-          TextButton.icon(
-            onPressed: () => LxCopy.copy(context, body),
-            icon: const Icon(Icons.copy, size: 14, color: LxTheme.textSecondary),
-            label: Text('Copy', style: LxTheme.bodySecondary),
+          // The visible label stays the compact 'Copy'; screen readers get the
+          // disambiguated 'Copy request' / 'Copy response' as the sole label.
+          Semantics(
+            button: true,
+            label: copyLabel,
+            onTap: () => LxCopy.copy(context, body),
+            child: ExcludeSemantics(
+              child: TextButton.icon(
+                onPressed: () => LxCopy.copy(context, body),
+                icon: const Icon(Icons.copy,
+                    size: 14, color: LxTheme.textSecondary),
+                label: Text('Copy', style: LxTheme.bodySecondary),
+              ),
+            ),
           ),
         ],
       ),
@@ -306,7 +320,8 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: LxTheme.border),
         ),
-        child: SelectableText(body, style: LxTheme.mono.copyWith(fontSize: 11.5)),
+        child:
+            SelectableText(body, style: LxTheme.mono.copyWith(fontSize: 11.5)),
       ),
       const SizedBox(height: 14),
     ];
@@ -322,26 +337,49 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          InkWell(
-            onTap: () => setState(() => _stackOpen = !_stackOpen),
-            child: Padding(
-              padding: const EdgeInsets.all(13),
-              child: Row(
-                children: [
-                  Icon(_stackOpen ? Icons.expand_more : Icons.chevron_right,
-                      size: 18, color: LxTheme.textSecondary),
-                  const SizedBox(width: 8),
-                  Text('TECHNICAL DETAILS', style: LxTheme.sectionLabel),
-                  const Spacer(),
-                  if (_stackOpen)
-                    GestureDetector(
-                      onTap: () => LxCopy.copy(context, stack),
-                      child: const Icon(Icons.copy,
-                          size: 14, color: LxTheme.textSecondary),
+          Row(
+            children: [
+              // The header is one expandable button for readers; the visible
+              // caps 'TECHNICAL DETAILS' is excluded so 'Technical details' +
+              // expanded/collapsed is announced once. The copy control is a
+              // sibling so the header button never swallows it.
+              Expanded(
+                child: Semantics(
+                  button: true,
+                  expanded: _stackOpen,
+                  label: 'Technical details',
+                  onTap: () => setState(() => _stackOpen = !_stackOpen),
+                  child: ExcludeSemantics(
+                    child: InkWell(
+                      onTap: () => setState(() => _stackOpen = !_stackOpen),
+                      child: Padding(
+                        padding: const EdgeInsets.all(13),
+                        child: Row(
+                          children: [
+                            Icon(
+                                _stackOpen
+                                    ? Icons.expand_more
+                                    : Icons.chevron_right,
+                                size: 18,
+                                color: LxTheme.textSecondary),
+                            const SizedBox(width: 8),
+                            Text('TECHNICAL DETAILS',
+                                style: LxTheme.sectionLabel),
+                          ],
+                        ),
+                      ),
                     ),
-                ],
+                  ),
+                ),
               ),
-            ),
+              if (_stackOpen)
+                LxKit.tapTarget(
+                  label: 'Copy stack trace',
+                  onTap: () => LxCopy.copy(context, stack),
+                  child: const Icon(Icons.copy,
+                      size: 14, color: LxTheme.textSecondary),
+                ),
+            ],
           ),
           if (_stackOpen)
             Padding(
@@ -393,15 +431,14 @@ class _LxInspectorPaneState extends State<LxInspectorPane> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(step.title,
-                      style: LxTheme.bodyPrimary.copyWith(
-                          fontSize: 13, fontWeight: FontWeight.w600)),
+                      style: LxTheme.bodyPrimary
+                          .copyWith(fontSize: 13, fontWeight: FontWeight.w600)),
                   if (step.description != null) ...[
                     const SizedBox(height: 2),
                     Text(step.description!, style: LxTheme.bodySecondary),
                   ],
                   const SizedBox(height: 2),
-                  Text(LxKit.clockTime(step.timestamp),
-                      style: LxTheme.caption),
+                  Text(LxKit.clockTime(step.timestamp), style: LxTheme.caption),
                 ],
               ),
             ),

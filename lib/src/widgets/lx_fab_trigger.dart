@@ -85,7 +85,8 @@ class _LxFabTriggerState extends State<LxFabTrigger>
               position: Tween<Offset>(
                 begin: const Offset(0, 1),
                 end: Offset.zero,
-              ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+              ).animate(CurvedAnimation(
+                  parent: animation, curve: Curves.easeOutCubic)),
               child: child,
             );
           },
@@ -102,7 +103,8 @@ class _LxFabTriggerState extends State<LxFabTrigger>
                 position: Tween<Offset>(
                   begin: const Offset(0, 1),
                   end: Offset.zero,
-                ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+                ).animate(CurvedAnimation(
+                    parent: animation, curve: Curves.easeOutCubic)),
                 child: child,
               );
             },
@@ -143,144 +145,161 @@ class _LxFabTriggerState extends State<LxFabTrigger>
             final badgeCount = LayerXLogStore.openProblemCount;
             final accentColor = hasErrors ? LxTheme.accentRed : LxTheme.accent;
 
-            return GestureDetector(
-              onPanStart: (_) => setState(() => _isDragging = true),
-              onPanUpdate: (details) {
-                setState(() {
-                  // dx measures from the right edge, so it moves opposite to
-                  // the finger's horizontal delta.
-                  final newRight =
-                      (_offset.dx - details.delta.dx).clamp(8.0, maxRight);
-                  final newTop =
-                      (_offset.dy + details.delta.dy).clamp(50.0, maxTop);
-                  _offset = Offset(newRight, newTop);
-                });
-              },
-              onPanEnd: (_) => setState(() => _isDragging = false),
+            // The pill is a labeled button for screen readers: one clean
+            // node whose explicit label wins over the inner 'Report a bug'
+            // Text (excluded), with a semantic tap that opens the debugger.
+            // The real drag/tap/long-press gestures stay on the GestureDetector
+            // below (ExcludeSemantics hides only semantics, not pointers).
+            return Semantics(
+              container: true,
+              button: true,
+              label: 'Report a bug — open the debugger',
               onTap: () => _openLogs(context),
-              onLongPress: () => _showQuickMenu(context),
-              child: AnimatedBuilder(
-                animation: _pulseAnim,
-                builder: (context, child) {
-                  final inset = _pulseAnim.value * 5;
-                  return Stack(
-                    alignment: Alignment.center,
-                    clipBehavior: Clip.none,
-                    children: [
-                      // ── Outer pulse ring ────────────────────────────────
-                      if (!_isDragging)
-                        Positioned(
-                          left: -inset,
-                          top: -inset,
-                          right: -inset,
-                          bottom: -inset,
-                          child: Container(
+              child: ExcludeSemantics(
+                child: GestureDetector(
+                  onPanStart: (_) => setState(() => _isDragging = true),
+                  onPanUpdate: (details) {
+                    setState(() {
+                      // dx measures from the right edge, so it moves opposite to
+                      // the finger's horizontal delta.
+                      final newRight =
+                          (_offset.dx - details.delta.dx).clamp(8.0, maxRight);
+                      final newTop =
+                          (_offset.dy + details.delta.dy).clamp(50.0, maxTop);
+                      _offset = Offset(newRight, newTop);
+                    });
+                  },
+                  onPanEnd: (_) => setState(() => _isDragging = false),
+                  onTap: () => _openLogs(context),
+                  onLongPress: () => _showQuickMenu(context),
+                  child: AnimatedBuilder(
+                    animation: _pulseAnim,
+                    builder: (context, child) {
+                      final inset = _pulseAnim.value * 5;
+                      return Stack(
+                        alignment: Alignment.center,
+                        clipBehavior: Clip.none,
+                        children: [
+                          // ── Outer pulse ring ────────────────────────────────
+                          if (!_isDragging)
+                            Positioned(
+                              left: -inset,
+                              top: -inset,
+                              right: -inset,
+                              bottom: -inset,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(
+                                      _pillHeight / 2 + inset),
+                                  border: Border.all(
+                                    color: accentColor.withValues(
+                                        alpha: (1.0 - _pulseAnim.value) * 0.5),
+                                    width: 1.5,
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                          // ── Main pill body: bug icon + static label ─────────
+                          // (§4.5 / P3 task 5: the badge carries the count, the
+                          // label never changes.)
+                          Container(
+                            width: pillWidth,
+                            height: _pillHeight,
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(
-                                  _pillHeight / 2 + inset),
+                              borderRadius:
+                                  BorderRadius.circular(_pillHeight / 2),
+                              color: LxTheme.surface,
                               border: Border.all(
-                                color: accentColor.withValues(
-                                    alpha: (1.0 - _pulseAnim.value) * 0.5),
+                                color: accentColor.withValues(alpha: 0.7),
                                 width: 1.5,
                               ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: accentColor.withValues(alpha: 0.35),
+                                  blurRadius: 16,
+                                  spreadRadius: 0,
+                                ),
+                                BoxShadow(
+                                  color: accentColor.withValues(alpha: 0.12),
+                                  blurRadius: 32,
+                                  spreadRadius: 0,
+                                ),
+                                const BoxShadow(
+                                  color: Color(0x80000000),
+                                  blurRadius: 8,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Transform.rotate(
+                                  angle: hasErrors ? math.pi / 12 : 0,
+                                  child: Icon(
+                                    hasErrors
+                                        ? Icons.bug_report
+                                        : Icons.pest_control_outlined,
+                                    color: accentColor,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Flexible(
+                                  child: Text(
+                                    'Report a bug',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: LxTheme.textPrimary,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.1,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ),
 
-                      // ── Main pill body: bug icon + static label ─────────
-                      // (§4.5 / P3 task 5: the badge carries the count, the
-                      // label never changes.)
-                      Container(
-                        width: pillWidth,
-                        height: _pillHeight,
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
-                        decoration: BoxDecoration(
-                          borderRadius:
-                              BorderRadius.circular(_pillHeight / 2),
-                          color: LxTheme.surface,
-                          border: Border.all(
-                            color: accentColor.withValues(alpha: 0.7),
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: accentColor.withValues(alpha: 0.35),
-                              blurRadius: 16,
-                              spreadRadius: 0,
-                            ),
-                            BoxShadow(
-                              color: accentColor.withValues(alpha: 0.12),
-                              blurRadius: 32,
-                              spreadRadius: 0,
-                            ),
-                            const BoxShadow(
-                              color: Color(0x80000000),
-                              blurRadius: 8,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Transform.rotate(
-                              angle: hasErrors ? math.pi / 12 : 0,
-                              child: Icon(
-                                hasErrors
-                                    ? Icons.bug_report
-                                    : Icons.pest_control_outlined,
-                                color: accentColor,
-                                size: 20,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Flexible(
-                              child: Text(
-                                'Report a bug',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: LxTheme.textPrimary,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.1,
+                          // ── Count badge ─────────────────────────────────────
+                          if (badgeCount > 0)
+                            Positioned(
+                              right: -2,
+                              top: -2,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 5, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: accentColor,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border:
+                                      Border.all(color: LxTheme.bg, width: 1.5),
+                                  boxShadow: LxTheme.glowShadow(accentColor,
+                                      spread: 3),
+                                ),
+                                constraints: const BoxConstraints(
+                                    minWidth: 18, minHeight: 18),
+                                child: Center(
+                                  child: Text(
+                                    badgeCount > 99 ? '99+' : '$badgeCount',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w800,
+                                      fontFamily: 'monospace',
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-
-                      // ── Count badge ─────────────────────────────────────
-                      if (badgeCount > 0)
-                        Positioned(
-                          right: -2,
-                          top: -2,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: accentColor,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: LxTheme.bg, width: 1.5),
-                              boxShadow: LxTheme.glowShadow(accentColor, spread: 3),
-                            ),
-                            constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-                            child: Center(
-                              child: Text(
-                                badgeCount > 99 ? '99+' : '$badgeCount',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 8,
-                                  fontWeight: FontWeight.w800,
-                                  fontFamily: 'monospace',
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                    ],
-                  );
-                },
+                        ],
+                      );
+                    },
+                  ),
+                ),
               ),
             );
           },
@@ -321,7 +340,10 @@ class _LxFabTriggerState extends State<LxFabTrigger>
                 icon: Icons.terminal_outlined,
                 color: LxTheme.accent,
                 label: 'View Logs',
-                onTap: () { Navigator.pop(ctx); _openLogs(context); },
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _openLogs(context);
+                },
               ),
               _menuTile(
                 ctx,
@@ -363,7 +385,9 @@ class _LxFabTriggerState extends State<LxFabTrigger>
               child: Icon(icon, color: color, size: 18),
             ),
             const SizedBox(width: 14),
-            Text(label, style: LxTheme.bodyPrimary.copyWith(fontWeight: FontWeight.w600)),
+            Text(label,
+                style:
+                    LxTheme.bodyPrimary.copyWith(fontWeight: FontWeight.w600)),
           ],
         ),
       ),
