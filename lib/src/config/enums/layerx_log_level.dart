@@ -27,22 +27,28 @@ enum LayerXLogLevel {
   fatal;
 
   /// The accent color used for this level in the console and the in-app viewer.
+  ///
+  /// UX P4 (§4.2 semantic AA remap): every level maps to the shared `LxTheme`
+  /// semantic palette — bright-on-dark variants that clear the WCAG-AA gate
+  /// (`test/config/theme_contrast_test.dart`). Levels color the row rail and
+  /// level icon (decorative, ≥ 3.0:1 on surface); `error`/`fatal` additionally
+  /// drive title text, so they clear the full body floor (≥ 4.5:1 on surface).
   Color get color {
     switch (this) {
       case LayerXLogLevel.verbose:
-        return const Color(0xFF9E9E9E);
+        return const Color(0xFF8B95A2); // textTertiary — muted neutral
       case LayerXLogLevel.debug:
-        return const Color(0xFF607D8B);
+        return const Color(0xFFAEB8C4); // textSecondary — neutral
       case LayerXLogLevel.info:
-        return const Color(0xFF42A5F5);
+        return const Color(0xFF5AA9FF); // accentBlue — info
       case LayerXLogLevel.success:
-        return const Color(0xFF43A047);
+        return const Color(0xFF3DD68C); // accentGreen — brand/success
       case LayerXLogLevel.warning:
-        return const Color(0xFFFFA726);
+        return const Color(0xFFF4B740); // accentAmber — warning
       case LayerXLogLevel.error:
-        return const Color(0xFFEF5350);
+        return const Color(0xFFFF6B6B); // accentRed — danger (6.30:1)
       case LayerXLogLevel.fatal:
-        return const Color(0xFFB71C1C);
+        return const Color(0xFFFF3B3B); // critical — crash/fatal (4.94:1)
     }
   }
 

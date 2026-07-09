@@ -21,18 +21,23 @@ enum LayerXLogSource {
   unknown;
 
   /// The accent color used for this source in the in-app viewer.
+  ///
+  /// UX P4 (§4.2 semantic AA remap): sources render as `LxKit.pill` chips —
+  /// the label is painted in this color on its own 14%-alpha tint over surface.
+  /// Each value therefore clears WCAG-AA (≥ 4.5:1) as label-on-own-tint, pinned
+  /// by `test/config/theme_contrast_test.dart` (the old mid-tone hues failed).
   Color get color {
     switch (this) {
       case LayerXLogSource.app:
-        return const Color(0xFF7E57C2);
+        return const Color(0xFFB79CFF); // bright violet — app (5.97:1)
       case LayerXLogSource.server:
-        return const Color(0xFFEF5350);
+        return const Color(0xFFFF6B6B); // accentRed — danger (5.18:1)
       case LayerXLogSource.backend:
-        return const Color(0xFFFF7043);
+        return const Color(0xFFF4B740); // accentAmber — warning (7.32:1)
       case LayerXLogSource.network:
-        return const Color(0xFF26C6DA);
+        return const Color(0xFF5AA9FF); // accentBlue — info (5.62:1)
       case LayerXLogSource.unknown:
-        return const Color(0xFFBDBDBD);
+        return const Color(0xFFAEB8C4); // textSecondary — neutral (6.61:1)
     }
   }
 

@@ -63,7 +63,7 @@ class LayerXBlameEngine {
               'overload, or a crash. The mobile app cannot work around this — the backend team must fix it.',
           qaNote:
               'Assign to: Backend / DevOps. Steps: Check server status page, deployment logs.',
-          color: Colors.red.shade900,
+          color: const Color(0xFFFF3B3B), // critical — 5xx server crash
           icon: Icons.cloud_off_outlined,
         );
       }
@@ -75,7 +75,7 @@ class LayerXBlameEngine {
               'response from the upstream app server. This is an infrastructure issue, not mobile code.',
           qaNote:
               'Assign to: DevOps. Steps: Check nginx/proxy logs and upstream service health.',
-          color: Colors.red.shade900,
+          color: const Color(0xFFFF3B3B), // critical — 5xx bad gateway
           icon: Icons.dns_outlined,
         );
       }
@@ -87,7 +87,7 @@ class LayerXBlameEngine {
               'Usually caused by a slow DB query or external dependency on the backend.',
           qaNote:
               'Assign to: Backend. Steps: Profile slow endpoints, check DB query performance.',
-          color: Colors.deepOrange.shade900,
+          color: const Color(0xFFF4B740), // accentAmber — gateway timeout
           icon: Icons.hourglass_disabled_outlined,
         );
       }
@@ -98,7 +98,7 @@ class LayerXBlameEngine {
             'backend code. The mobile app is sending a valid request — the problem is server-side.',
         qaNote:
             'Assign to: Backend. Steps: Share endpoint, request payload, and timestamp with backend team.',
-        color: Colors.red.shade900,
+        color: const Color(0xFFFF3B3B), // critical — 5xx internal error
         icon: Icons.report_gmailerrorred_outlined,
       );
     }
@@ -119,7 +119,7 @@ class LayerXBlameEngine {
             '(2) server DNS not resolving, (3) firewall blocking, (4) VPN issue.',
         qaNote:
             'Test on Wi-Fi AND 4G. If issue persists on both, assign to: DevOps (DNS/firewall).',
-        color: Colors.teal.shade800,
+        color: const Color(0xFF5AA9FF), // accentBlue — connectivity
         icon: Icons.wifi_off_outlined,
       );
     }
@@ -138,7 +138,7 @@ class LayerXBlameEngine {
             'it is a backend performance problem.',
         qaNote:
             'Check: (1) Dio timeout config in the app, (2) endpoint response time in Postman. If Postman is also slow → Backend issue.',
-        color: Colors.orange.shade900,
+        color: const Color(0xFFF4B740), // accentAmber — timeout
         icon: Icons.timer_off_outlined,
       );
     }
@@ -155,7 +155,7 @@ class LayerXBlameEngine {
             'limit being too aggressive for normal usage.',
         qaNote:
             'Check: (1) Is the app retrying in a loop? (Frontend issue) (2) Is rate-limit threshold correct? (Backend issue)',
-        color: Colors.deepOrange.shade900,
+        color: const Color(0xFFF4B740), // accentAmber — rate limit
         icon: Icons.speed_outlined,
       );
     }
@@ -172,7 +172,7 @@ class LayerXBlameEngine {
             '(2) Is refresh-token flow working correctly?',
         qaNote:
             'Test: Log out → log in → retry. If it persists after fresh login → Backend (token validation bug).',
-        color: Colors.orange.shade900,
+        color: const Color(0xFFF4B740), // accentAmber — auth/token
         icon: Icons.vpn_key_outlined,
       );
     }
@@ -189,7 +189,7 @@ class LayerXBlameEngine {
             'resource. Usually a backend roles/ACL configuration problem, not a mobile bug.',
         qaNote:
             'Verify the user\'s role in the database. If role is correct → Backend (permission rule bug).',
-        color: Colors.orange.shade800,
+        color: const Color(0xFFF4B740), // accentAmber — permission/role
         icon: Icons.gpp_bad_outlined,
       );
     }
@@ -207,7 +207,7 @@ class LayerXBlameEngine {
             'backend should return a more descriptive error.',
         qaNote:
             'Check if the app does a pre-check before the POST. If yes → Backend should handle idempotency.',
-        color: Colors.blueGrey.shade800,
+        color: const Color(0xFFAEB8C4), // textSecondary — neutral conflict
         icon: Icons.merge_outlined,
       );
     }
@@ -229,7 +229,7 @@ class LayerXBlameEngine {
               'an outdated API schema. This is typically a frontend model/serialization bug.',
           qaNote:
               'Compare the request payload in this log with the backend API docs. Look for missing/renamed fields.',
-          color: Colors.blue.shade900,
+          color: const Color(0xFFB79CFF), // bright violet — app payload bug
           icon: Icons.app_registration_outlined,
         );
       }
@@ -240,7 +240,7 @@ class LayerXBlameEngine {
             'error (malformed syntax, invalid request message framing, or deceptive request routing).',
         qaNote:
             'Inspect the request payload below. Compare fields against the API contract.',
-        color: Colors.blue.shade900,
+        color: const Color(0xFFB79CFF), // bright violet — bad request
         icon: Icons.broken_image_outlined,
       );
     }
@@ -257,7 +257,7 @@ class LayerXBlameEngine {
             'updating the app.',
         qaNote:
             'Copy the endpoint from this log and test in Postman. If Postman also gets 404 → Backend deleted/renamed it.',
-        color: Colors.deepOrange.shade900,
+        color: const Color(0xFFF4B740), // accentAmber — endpoint mismatch
         icon: Icons.link_off_outlined,
       );
     }
@@ -282,7 +282,7 @@ class LayerXBlameEngine {
               'app is trying to parse. This broke the mobile data model.',
           qaNote:
               'CRITICAL: Compare "Previous Response" vs "Current Response" in this log. Show the diff to the backend team.',
-          color: Colors.red.shade800,
+          color: const Color(0xFFFF3B3B), // critical — backend broke contract
           icon: Icons.swap_horiz_outlined,
         );
       }
@@ -294,7 +294,7 @@ class LayerXBlameEngine {
             'of String, null instead of a list). Check the model\'s fromJson() vs the actual response.',
         qaNote:
             'Look at the Response Payload in this log. Find the field whose type differs from the Dart model.',
-        color: Colors.purple.shade900,
+        color: const Color(0xFFB79CFF), // bright violet — app model mismatch
         icon: Icons.data_object_outlined,
       );
     }
@@ -348,7 +348,7 @@ class LayerXBlameEngine {
         responsibleParty: '📱 Flutter Mobile App (Frontend Code Bug)',
         explanation: detail,
         qaNote: note,
-        color: Colors.purple.shade900,
+        color: const Color(0xFFB79CFF), // bright violet — Flutter app bug
         icon: Icons.developer_mode_outlined,
       );
     }
@@ -364,7 +364,7 @@ class LayerXBlameEngine {
             'Info.plist or the plugin is misconfigured.',
         qaNote:
             'Check app permissions on device settings. If permissions are granted → Plugin setup bug (Mobile Team).',
-        color: Colors.indigo.shade800,
+        color: const Color(0xFF5AA9FF), // accentBlue — native/platform
         icon: Icons.phonelink_erase_outlined,
       );
     }
@@ -377,7 +377,7 @@ class LayerXBlameEngine {
           'Review the stack trace, endpoint, request payload, and response body for clues.',
       qaNote:
           'Share the full log export (clipboard icon in list) with both Mobile and Backend teams.',
-      color: Colors.grey.shade700,
+      color: const Color(0xFFAEB8C4), // textSecondary — neutral fallback
       icon: Icons.help_outline,
     );
   }

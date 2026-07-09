@@ -73,32 +73,42 @@ enum LayerXLogCategory {
   }
 
   /// The accent color used for this category in the viewer.
+  ///
+  /// UX P4 (§4.2 semantic AA remap): categories render as `LxTheme.pill` chips
+  /// (label painted in this color on its own 14%-alpha tint over surface), so
+  /// each value maps to the nearest `LxTheme` semantic family — except
+  /// `navigation`, a bespoke bright violet `#B79CFF` with no theme token (§4
+  /// retired purple; `accentPurple` now aliases `accentAmber`). Every value
+  /// clears WCAG-AA (≥ 4.5:1) as label-on-own-tint — pinned by
+  /// `test/config/theme_contrast_test.dart`. `crash` uses the danger red
+  /// `#FF6B6B` rather than the darker `critical #FF3B3B`, which reads only
+  /// 4.32:1 on its own tint (below the chip floor).
   Color get color {
     switch (this) {
       case LayerXLogCategory.app:
-        return const Color(0xFF39D353);
+        return const Color(0xFF3DD68C); // accentGreen — app/success (7.06:1)
       case LayerXLogCategory.framework:
-        return const Color(0xFF38BDF8);
+        return const Color(0xFF5AA9FF); // accentBlue — info (5.62:1)
       case LayerXLogCategory.uiException:
-        return const Color(0xFFFF5C57);
+        return const Color(0xFFFF6B6B); // accentRed — danger (5.18:1)
       case LayerXLogCategory.dartException:
-        return const Color(0xFFFF9F45);
+        return const Color(0xFFF4B740); // accentAmber — warning (7.32:1)
       case LayerXLogCategory.network:
-        return const Color(0xFF22D3EE);
+        return const Color(0xFF5AA9FF); // accentBlue — info (5.62:1)
       case LayerXLogCategory.api:
-        return const Color(0xFF38BDF8);
+        return const Color(0xFF5AA9FF); // accentBlue — info (5.62:1)
       case LayerXLogCategory.navigation:
-        return const Color(0xFFA78BFA);
+        return const Color(0xFFB79CFF); // bright violet (5.97:1)
       case LayerXLogCategory.lifecycle:
-        return const Color(0xFF3FE06B);
+        return const Color(0xFF3DD68C); // accentGreen — brand (7.06:1)
       case LayerXLogCategory.performance:
-        return const Color(0xFFE3B341);
+        return const Color(0xFFF4B740); // accentAmber — warning (7.32:1)
       case LayerXLogCategory.crash:
-        return const Color(0xFFB71C1C);
+        return const Color(0xFFFF6B6B); // accentRed — danger (5.18:1)
       case LayerXLogCategory.debugConsole:
-        return const Color(0xFF6FA982);
+        return const Color(0xFF8B95A2); // textTertiary — neutral (4.68:1)
       case LayerXLogCategory.system:
-        return const Color(0xFF9E9E9E);
+        return const Color(0xFFAEB8C4); // textSecondary — neutral (6.61:1)
     }
   }
 

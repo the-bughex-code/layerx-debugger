@@ -6,15 +6,18 @@ void main() {
   group('LayerXLogLevel', () {
     test('exposes a success level rendered in green', () {
       expect(LayerXLogLevel.values, contains(LayerXLogLevel.success));
-      expect(LayerXLogLevel.success.color, const Color(0xFF43A047));
+      // UX P4: semantic AA remap — success → LxTheme.accentGreen (brand).
+      expect(LayerXLogLevel.success.color, const Color(0xFF3DD68C));
       expect(LayerXLogLevel.success.emoji, '✅');
       expect(LayerXLogLevel.success.label, 'SUCCESS');
     });
 
     test('aligns colors with the documented palette', () {
-      expect(LayerXLogLevel.info.color, const Color(0xFF42A5F5)); // blue
-      expect(LayerXLogLevel.warning.color, const Color(0xFFFFA726)); // amber
-      expect(LayerXLogLevel.error.color, const Color(0xFFEF5350)); // red
+      // UX P4: semantic AA remap — levels map to the LxTheme semantic set and
+      // clear the WCAG-AA contrast gate (test/config/theme_contrast_test.dart).
+      expect(LayerXLogLevel.info.color, const Color(0xFF5AA9FF)); // accentBlue
+      expect(LayerXLogLevel.warning.color, const Color(0xFFF4B740)); // accentAmber
+      expect(LayerXLogLevel.error.color, const Color(0xFFFF6B6B)); // accentRed
     });
 
     test('only error-like levels have a tinted background', () {
