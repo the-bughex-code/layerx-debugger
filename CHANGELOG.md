@@ -5,6 +5,20 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.9.0
+
+### Changed
+
+- **UX P4: accessible to every tester.** Every control now has a ≥48dp touch
+  target and a screen-reader label (VoiceOver/TalkBack never announce a bare
+  "button"). With OS reduce-motion on, nothing animates perpetually — and even
+  without it, the floating button's pulse now fires only when a new problem
+  arrives, then rests. A one-time coach mark introduces the "Report a bug"
+  button on first run, empty states say plainly that the tool records what
+  happened (redo the action in the app — there is no retry button to hunt for),
+  and the viewer holds up under 1.5× system text scaling and RTL locales.
+  This completes the 1.5.0 → 1.9.0 usability-first redesign arc.
+
 ## 1.8.0
 
 ### Changed
