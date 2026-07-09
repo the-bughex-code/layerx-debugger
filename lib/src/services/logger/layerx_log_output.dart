@@ -148,9 +148,16 @@ class LayerXLogOutput {
         if (packageName != null) {
           if (!line.contains('package:$packageName')) continue;
         } else {
-          if (line.contains('dart:') ||
-              line.contains('package:flutter') ||
-              line.contains('package:logger')) {
+          // Skip only true SDK / framework frames. These render with the
+          // location prefixed by `(` — e.g. `(dart:core-patch/...)`,
+          // `(package:flutter/src/...)`. Matching the bare substrings would
+          // also match every real app frame, whose path ends in
+          // `.dart:<line>` (`home_controller.dart:42` contains `dart:`) and
+          // whose package may start with `flutter_`/`logger` — skipping the
+          // app frames the attribution is meant to find.
+          if (line.contains('(dart:') ||
+              line.contains('(package:flutter/') ||
+              line.contains('(package:logger/')) {
             continue;
           }
           if (!line.contains('package:')) continue;

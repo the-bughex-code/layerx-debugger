@@ -5,6 +5,20 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.9.1
+
+### Fixed
+
+- **Log attribution (screen / method) now populates from the stack.** The
+  stack-frame parser's SDK-frame filter matched `dart:` as a bare substring,
+  which also matched every real app frame — a normal frame path ends in
+  `.dart:<line>` (e.g. `package:myapp/home_controller.dart:42`). As a result it
+  skipped all app frames and `screenName` / `methodName` were never derived from
+  a stack (only file/line resolved). The filter now anchors to the frame's
+  location parens (`(dart:`, `(package:flutter/`, `(package:logger/`), so true
+  SDK/framework frames are skipped while the first real app frame is attributed
+  correctly.
+
 ## 1.9.0
 
 ### Changed
