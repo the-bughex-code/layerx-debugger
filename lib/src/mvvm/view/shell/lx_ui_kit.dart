@@ -173,21 +173,33 @@ abstract final class LxKit {
   /// Wraps [child] in a staggered fade + slide-up entrance animation, used by
   /// the list panes. The delay grows with [index] but is capped so long lists
   /// stay snappy and never feel laggy.
+  ///
+  /// UX P4: under OS reduce-motion the entrance is skipped entirely — the row
+  /// renders at full opacity on the first frame and the keyed
+  /// `TweenAnimationBuilder` is absent. `disableAnimations` is read via a
+  /// [Builder] so the three call sites need no `BuildContext` threading.
   static Widget stagger(int index, Widget child) {
-    final delayMs = (index * 28).clamp(0, 240);
-    return TweenAnimationBuilder<double>(
-      key: ValueKey('lx_stagger_$index'),
-      tween: Tween(begin: 0, end: 1),
-      duration: Duration(milliseconds: 320 + delayMs),
-      curve: Curves.easeOutCubic,
-      builder: (context, t, c) => Opacity(
-        opacity: t.clamp(0, 1),
-        child: Transform.translate(
-          offset: Offset(0, (1 - t) * 10),
-          child: c,
-        ),
-      ),
-      child: child,
+    return Builder(
+      builder: (context) {
+        final reduceMotion =
+            MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+        if (reduceMotion) return child;
+        final delayMs = (index * 28).clamp(0, 240);
+        return TweenAnimationBuilder<double>(
+          key: ValueKey('lx_stagger_$index'),
+          tween: Tween(begin: 0, end: 1),
+          duration: Duration(milliseconds: 320 + delayMs),
+          curve: Curves.easeOutCubic,
+          builder: (context, t, c) => Opacity(
+            opacity: t.clamp(0, 1),
+            child: Transform.translate(
+              offset: Offset(0, (1 - t) * 10),
+              child: c,
+            ),
+          ),
+          child: child,
+        );
+      },
     );
   }
 

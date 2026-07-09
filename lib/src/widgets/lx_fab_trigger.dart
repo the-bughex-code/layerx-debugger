@@ -24,6 +24,10 @@ class _LxFabTriggerState extends State<LxFabTrigger>
   static const double _pillMaxWidth = 170;
   static const double _pillHeight = 48;
 
+  // UX P4: the pulse ring is a one-shot attention signal, not perpetual motion.
+  // A new problem runs it for this many forward/reverse cycles, then it rests.
+  static const int _maxPulseCycles = 3;
+
   // Static so the dragged position and one-time mount animation survive the
   // overlay entry being re-inserted on navigation (see LayerXOverlayInstaller).
   // `dx` is the distance from the RIGHT screen edge (the pill is right-anchored
@@ -31,7 +35,18 @@ class _LxFabTriggerState extends State<LxFabTrigger>
   // `dy` is the distance from the top.
   static Offset _offset = const Offset(-1, -1);
   static bool _mountedOnce = false;
+
+  // The open-problem count at the last build. Static so it survives the overlay
+  // re-insert on navigation; re-synced to the live count on every mount (the FAB
+  // only exists while the viewer is closed), so problems that arrive *while the
+  // viewer is open* never retro-pulse the ring when it closes.
+  static int _lastSeenProblemCount = 0;
+
   bool _isDragging = false;
+  // Whether the one-shot pulse ring is currently running. At rest it is false
+  // and the controller is idle — nothing animates.
+  bool _isPulsing = false;
+  int _pulseCyclesDone = 0;
 
   late final AnimationController _pulseCtrl;
   late final Animation<double> _pulseAnim;
@@ -42,16 +57,23 @@ class _LxFabTriggerState extends State<LxFabTrigger>
   void initState() {
     super.initState();
 
-    // Glow pulse ring
+    // Baseline the "new problem" comparison to whatever is already on screen so
+    // pre-existing problems never pulse — only genuinely new ones do.
+    _lastSeenProblemCount = LayerXLogStore.openProblemCount;
+
+    // Glow pulse ring — event-driven, NOT ..repeat(). One forward/reverse pass
+    // is a cycle; _onPulseStatus counts them and stops after _maxPulseCycles so
+    // the ring never animates perpetually (UX P4 / reduce-motion).
     _pulseCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    )..repeat(reverse: true);
+      duration: const Duration(milliseconds: 700),
+    )..addStatusListener(_onPulseStatus);
     _pulseAnim = Tween<double>(begin: 0.5, end: 1.0).animate(
       CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
     );
 
-    // Slide-in on mount
+    // Slide-in on mount — a one-shot, non-perpetual entrance. The reduce-motion
+    // spec targets *perpetual* motion, so this short elastic is allowed to stay.
     _mountCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
@@ -72,6 +94,32 @@ class _LxFabTriggerState extends State<LxFabTrigger>
     _pulseCtrl.dispose();
     _mountCtrl.dispose();
     super.dispose();
+  }
+
+  /// Drives the pulse ring through [_maxPulseCycles] forward/reverse cycles,
+  /// then stops it dead (rings goes away, controller idles). Guarded on
+  /// [mounted] so a controller callback can never fire after dispose.
+  void _onPulseStatus(AnimationStatus status) {
+    if (!mounted) return;
+    if (status == AnimationStatus.completed) {
+      _pulseCtrl.reverse();
+    } else if (status == AnimationStatus.dismissed) {
+      _pulseCyclesDone++;
+      if (_pulseCyclesDone < _maxPulseCycles) {
+        _pulseCtrl.forward();
+      } else if (_isPulsing) {
+        setState(() => _isPulsing = false);
+      }
+    }
+  }
+
+  /// Starts the one-shot attention pulse. No-op while dragging; callers must
+  /// already have checked reduce-motion is off.
+  void _startPulse() {
+    if (!mounted || _isDragging) return;
+    _pulseCyclesDone = 0;
+    setState(() => _isPulsing = true);
+    _pulseCtrl.forward(from: 0);
   }
 
   void _openLogs(BuildContext context) {
@@ -144,6 +192,20 @@ class _LxFabTriggerState extends State<LxFabTrigger>
             final hasErrors = LayerXLogStore.errorCount > 0;
             final badgeCount = LayerXLogStore.openProblemCount;
             final accentColor = hasErrors ? LxTheme.accentRed : LxTheme.accent;
+            final reduceMotion =
+                MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+
+            // Fire the one-shot pulse only when the open-problem count actually
+            // grows, and never under OS reduce-motion. Scheduled post-frame
+            // because we cannot setState() during build.
+            if (badgeCount > _lastSeenProblemCount &&
+                !reduceMotion &&
+                !_isDragging) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) _startPulse();
+              });
+            }
+            _lastSeenProblemCount = badgeCount;
 
             // The pill is a labeled button for screen readers: one clean
             // node whose explicit label wins over the inner 'Report a bug'
@@ -180,9 +242,10 @@ class _LxFabTriggerState extends State<LxFabTrigger>
                         alignment: Alignment.center,
                         clipBehavior: Clip.none,
                         children: [
-                          // ── Outer pulse ring ────────────────────────────────
-                          if (!_isDragging)
+                          // ── Outer pulse ring (one-shot; keyed for tests) ────
+                          if (!_isDragging && _isPulsing)
                             Positioned(
+                              key: const ValueKey('lx-fab-pulse'),
                               left: -inset,
                               top: -inset,
                               right: -inset,
