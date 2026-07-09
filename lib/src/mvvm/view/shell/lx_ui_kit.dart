@@ -9,6 +9,13 @@ import 'package:layerx_debugger/src/repository/layerx_log_store.dart';
 
 /// Shared helpers and small reusable widgets for the redesigned debugger shell.
 abstract final class LxKit {
+  // ── Copy ─────────────────────────────────────────────────────────────────
+  /// UX P4 scope honesty: the single line every truly-empty state ends with, so
+  /// a tester always knows this tool *records* — it does not retry for them.
+  /// One source of truth so Problems / Console / Network never drift.
+  static const String scopeHonestyLine =
+      'This records what happened — redo the action in the app.';
+
   // ── Classification ─────────────────────────────────────────────────────────
   static bool isNetwork(LayerXLogEntry e) => e.endpoint != null;
 

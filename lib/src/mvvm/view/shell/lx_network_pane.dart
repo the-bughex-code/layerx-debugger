@@ -102,7 +102,7 @@ class _LxNetworkPaneState extends State<LxNetworkPane> {
                       action: LxKit.clearFiltersButton(_clearFilters),
                     )
                   : LxKit.emptyState(Icons.wifi_tethering_off, 'NO REQUESTS',
-                      'No network calls match this view yet.'),
+                      'No network calls captured yet. ${LxKit.scopeHonestyLine}'),
         ),
       ],
     );

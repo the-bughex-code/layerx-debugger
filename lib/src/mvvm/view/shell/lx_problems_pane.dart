@@ -82,9 +82,10 @@ class LxProblemsPane extends StatelessWidget {
             Icons.inbox_outlined,
             'NO PROBLEMS YET',
             // Scope-honest: this tool records what happened; it can't retry
-            // or fix anything on the tester's behalf.
+            // or fix anything on the tester's behalf. One shared line (UX P4)
+            // so every empty state says the same thing.
             'Go use the app — anything that breaks shows up here. '
-                "This records what happened; it can't retry for you.",
+                '${LxKit.scopeHonestyLine}',
           )
         : ListView.builder(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),

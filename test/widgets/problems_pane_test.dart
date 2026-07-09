@@ -178,10 +178,11 @@ void main() {
       );
 
       expect(find.text('NO PROBLEMS YET'), findsOneWidget);
-      // Scope-honest copy: the tool records, it can't retry.
+      // Scope-honest copy (UX P4): the tool records, it can't retry — one
+      // shared line across Problems / Console / Network empty states.
       expect(
         find.text('Go use the app — anything that breaks shows up here. '
-            "This records what happened; it can't retry for you."),
+            'This records what happened — redo the action in the app.'),
         findsOneWidget,
       );
     });

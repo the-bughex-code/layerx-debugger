@@ -72,8 +72,12 @@ abstract final class LayerXOverlayInstaller {
     });
   }
 
-  /// Removes the trigger overlay. Intended for tests / hot-restart.
-  static void reset() => _removeEntry();
+  /// Removes the trigger overlay. Intended for tests / hot-restart. Also
+  /// re-arms the first-run coach mark so a subsequent install can show it again.
+  static void reset() {
+    _removeEntry();
+    LxFabTrigger.resetCoachMark();
+  }
 
   static void _removeEntry() {
     try {

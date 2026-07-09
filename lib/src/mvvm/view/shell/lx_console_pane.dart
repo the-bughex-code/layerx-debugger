@@ -89,7 +89,7 @@ class _LxConsolePaneState extends State<LxConsolePane> {
                       action: LxKit.clearFiltersButton(_clearFilters),
                     )
                   : LxKit.emptyState(Icons.terminal, 'NO LOGS',
-                      'Nothing matches the current filter.'),
+                      'Nothing has been logged yet. ${LxKit.scopeHonestyLine}'),
         ),
       ],
     );

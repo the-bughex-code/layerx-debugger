@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 
 import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
 
@@ -17,11 +18,27 @@ abstract final class LayerXViewerState {
       ValueNotifier<LayerXLogEntry?>(null);
 
   /// Marks the viewer open. Called by the shell on mount.
-  static void markOpened() => isOpen.value = true;
+  static void markOpened() => _run(() => isOpen.value = true);
 
   /// Marks the viewer closed and clears the selection. Called on shell dispose.
-  static void markClosed() {
-    isOpen.value = false;
-    selected.value = null;
+  static void markClosed() => _run(() {
+        isOpen.value = false;
+        selected.value = null;
+      });
+
+  /// Runs [fn], deferring to after the current frame when we are mid-build.
+  ///
+  /// The shell calls [markOpened] from its `initState`, which can run *during*
+  /// the overlay's build (when the FAB pushes the shell). Flipping [isOpen]
+  /// synchronously there would `markNeedsBuild` the trigger layer that listens
+  /// to it while the framework is already building — a hard error. Deferring one
+  /// frame in that case keeps the state change safe and imperceptible.
+  static void _run(VoidCallback fn) {
+    final binding = SchedulerBinding.instance;
+    if (binding.schedulerPhase == SchedulerPhase.persistentCallbacks) {
+      binding.addPostFrameCallback((_) => fn());
+    } else {
+      fn();
+    }
   }
 }
