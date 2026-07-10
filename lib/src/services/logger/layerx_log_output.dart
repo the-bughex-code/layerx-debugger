@@ -40,17 +40,41 @@ class LayerXLogOutput {
     StackTrace? stackTrace,
     DateTime? timestamp,
     String? packageName,
+    bool resolveLocation = true,
   }) {
     try {
-      final stackStr = stackTrace?.toString();
+      final providedStackStr = stackTrace?.toString();
       final combined = error != null ? '$message\n$error' : message;
       final now = timestamp ?? DateTime.now();
 
       var resolvedScreen = screen;
       var resolvedMethod = method;
-      if (resolvedScreen == null || resolvedMethod == null) {
-        final parsed =
-            _parseStackTrace(stackTrace ?? StackTrace.current, packageName);
+
+      // Source attribution needs a stack trace, but capturing
+      // `StackTrace.current` is costly on the UI thread — in a debug/JIT build
+      // it can run into the millisecond range per call. Only synthesize one when
+      // the caller didn't already supply the location AND the entry is worth
+      // attributing: an explicit error/stack, or a warning/error/fatal.
+      // High-volume, low-value lines (captured console output, plain debug/info)
+      // skip it entirely — otherwise a chatty app (e.g. one whose logger
+      // pretty-prints API payloads) floods the UI thread with hundreds of stack
+      // captures on a single navigation and blocks it long enough to ANR.
+      // Captured at most once, then reused for both the symbol and file:line
+      // parses (previously captured twice per call).
+      final needsLocation =
+          resolveLocation && (resolvedScreen == null || resolvedMethod == null);
+      final worthCapturing = stackTrace != null ||
+          error != null ||
+          level == LayerXLogLevel.warning ||
+          level == LayerXLogLevel.error ||
+          level == LayerXLogLevel.fatal;
+
+      var locationStack = providedStackStr;
+      if (needsLocation && worthCapturing && locationStack == null) {
+        locationStack = StackTrace.current.toString();
+      }
+      if (needsLocation && locationStack != null) {
+        final parsed = _parseStackTrace(locationStack, packageName);
         resolvedScreen ??= parsed['screen'];
         resolvedMethod ??= parsed['method'];
       }
@@ -58,13 +82,12 @@ class LayerXLogOutput {
       final source = LayerXSourceDetector.detect(
         statusCode: statusCode,
         message: combined,
-        stackTrace: stackStr,
+        stackTrace: providedStackStr,
       );
 
-      final location = LayerXStackLocation.parse(
-        (stackTrace ?? StackTrace.current).toString(),
-        packageName: packageName,
-      );
+      final location = (resolveLocation && locationStack != null)
+          ? LayerXStackLocation.parse(locationStack, packageName: packageName)
+          : LayerXStackLocation.empty;
       final resolvedCategory = category ??
           (endpoint != null
               ? LayerXLogCategory.api
@@ -72,7 +95,7 @@ class LayerXLogOutput {
 
       String? solution;
       if (level == LayerXLogLevel.error || level == LayerXLogLevel.fatal) {
-        solution = LayerXSolutionEngine.getSuggestion(combined, stackStr);
+        solution = LayerXSolutionEngine.getSuggestion(combined, providedStackStr);
       }
 
       final journey = _buildJourney(
@@ -122,7 +145,7 @@ class LayerXLogOutput {
         statusCode: statusCode,
         requestPayload: requestPayload,
         responsePayload: responsePayload,
-        stackTrace: stackStr,
+        stackTrace: providedStackStr,
         errorCode: errorCode,
         journey: journey,
         extras: extras ?? {},
@@ -134,11 +157,11 @@ class LayerXLogOutput {
   }
 
   static Map<String, String?> _parseStackTrace(
-    StackTrace trace,
+    String trace,
     String? packageName,
   ) {
     try {
-      final lines = trace.toString().split('\n');
+      final lines = trace.split('\n');
       for (final line in lines) {
         if (line.contains('layerx_debugger') ||
             line.contains('layerx_log') ||

@@ -9,6 +9,16 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **ANR / hang during navigation (critical).** In debug builds, console capture
+  routed every framework/app `debugPrint` line into the log-ingest path, which
+  synchronously captured `StackTrace.current` **twice per line**. Apps whose
+  logger pretty-prints API payloads emit hundreds of console lines per
+  navigation, so a single navigation to a data-heavy screen could block the UI
+  thread long enough to trigger an Android **ANR** (SIGQUIT / "Wrote stack traces
+  to tombstoned"). Ingest now captures a stack **at most once**, and only for
+  entries worth attributing (an explicit error/stack, or `warning`+); the
+  high-volume console-capture path skips it entirely. Data-heavy screens no
+  longer hang.
 - **Log attribution (screen / method) now populates from the stack.** The
   stack-frame parser's SDK-frame filter matched `dart:` as a bare substring,
   which also matched every real app frame — a normal frame path ends in
@@ -18,6 +28,14 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   location parens (`(dart:`, `(package:flutter/`, `(package:logger/`), so true
   SDK/framework frames are skipped while the first real app frame is attributed
   correctly.
+
+### Changed
+
+- The in-app debugger (shell, detail screen and the floating trigger overlay) is
+  now wrapped in its **own self-contained dark Material theme**, so it renders
+  consistently on any host — including Cupertino/`WidgetsApp` apps with no
+  Material ancestor (fixes a "No Material widget found" crash class for the FAB's
+  bottom sheet / popup menu) — and never inherits the host app's theme.
 
 ## 1.9.0
 

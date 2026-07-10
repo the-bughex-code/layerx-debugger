@@ -1,7 +1,8 @@
 // Internal — not part of the public API.
 // ignore_for_file: public_member_api_docs
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
+import 'package:layerx_debugger/src/config/lx_theme.dart';
 import 'package:layerx_debugger/src/core/layerx_debugger_initializer.dart';
 import 'package:layerx_debugger/src/core/layerx_viewer_state.dart';
 import 'package:layerx_debugger/src/widgets/lx_edge_trigger.dart';
@@ -151,12 +152,24 @@ class LxTriggerLayer extends StatelessWidget {
       valueListenable: LayerXViewerState.isOpen,
       builder: (context, open, _) {
         if (open) return const SizedBox.shrink();
-        return Positioned.fill(
-          child: Stack(
-            children: [
-              if (config.enableEdgeSwipe) const LxEdgeTrigger(),
-              if (config.enableFloatingButton) const LxFabTrigger(),
-            ],
+        // Wrap the triggers in the debugger's own dark theme and a transparent
+        // Material so the FAB's bottom sheet / popup / ink work on ANY host —
+        // including a Cupertino/WidgetsApp app with no Material ancestor — and
+        // never inherit the host app's (possibly light) theme. Transparent
+        // Material paints nothing and does not absorb pointers, so taps still
+        // pass through the empty areas to the app below.
+        return Theme(
+          data: LxTheme.debuggerTheme,
+          child: Material(
+            type: MaterialType.transparency,
+            child: SizedBox.expand(
+              child: Stack(
+                children: [
+                  if (config.enableEdgeSwipe) const LxEdgeTrigger(),
+                  if (config.enableFloatingButton) const LxFabTrigger(),
+                ],
+              ),
+            ),
           ),
         );
       },

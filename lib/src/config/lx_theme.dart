@@ -213,6 +213,56 @@ abstract final class LxTheme {
         actionsIconTheme: IconThemeData(color: textSecondary, size: 20),
       );
 
+  // ── Self-contained debugger theme ───────────────────────────────────────────
+  /// A complete dark [ThemeData] for the in-app debugger, so the viewer renders
+  /// identically on top of ANY host app — a Cupertino/`WidgetsApp` host with no
+  /// Material ancestor (where the FAB's bottom sheet / popup menu / ink would
+  /// otherwise throw "No Material widget found"), or a `MaterialApp` whose own
+  /// (possibly light) theme would bleed into the viewer's Material surfaces
+  /// (Tooltip, PopupMenu, BottomSheet, SnackBar, FilledButton fill). Wrap the
+  /// debugger shell and the trigger overlay in `Theme(data: debuggerTheme, …)`.
+  static ThemeData get debuggerTheme {
+    final base = ThemeData.dark(useMaterial3: true);
+    return base.copyWith(
+      scaffoldBackgroundColor: bg,
+      canvasColor: bg,
+      dividerColor: border,
+      colorScheme: base.colorScheme.copyWith(
+        brightness: Brightness.dark,
+        primary: accent,
+        onPrimary: accentInk,
+        surface: surface,
+        onSurface: textPrimary,
+        error: critical,
+        onError: criticalOn,
+      ),
+      appBarTheme: appBarTheme,
+      popupMenuTheme: const PopupMenuThemeData(
+        color: surfaceHigh,
+        surfaceTintColor: Colors.transparent,
+        textStyle: TextStyle(color: textPrimary, fontSize: 14),
+      ),
+      tooltipTheme: TooltipThemeData(
+        decoration: BoxDecoration(
+          color: surfaceHigh,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: borderActive),
+        ),
+        textStyle: const TextStyle(color: textPrimary, fontSize: 12),
+      ),
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: surfaceAlt,
+        surfaceTintColor: Colors.transparent,
+        modalBackgroundColor: surfaceAlt,
+      ),
+      snackBarTheme: const SnackBarThemeData(
+        backgroundColor: surfaceHigh,
+        contentTextStyle: TextStyle(color: textPrimary),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   // ── Snackbar ───────────────────────────────────────────────────────────────
   static SnackBar snackBar(String message) => SnackBar(
         // §4.5.10 — sans body text in textPrimary on surfaceHigh.

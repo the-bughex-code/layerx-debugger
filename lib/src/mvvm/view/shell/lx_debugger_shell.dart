@@ -75,7 +75,11 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
 
   @override
   Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
+    // Self-contained dark theme so the viewer looks identical on top of any
+    // host app and never inherits the host's (possibly light) Material theme.
+    return Theme(
+      data: LxTheme.debuggerTheme,
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light
           .copyWith(statusBarColor: Colors.transparent),
       child: ValueListenableBuilder<List<LayerXLogEntry>>(
@@ -132,6 +136,7 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
             ),
           );
         },
+      ),
       ),
     );
   }
@@ -404,7 +409,9 @@ class _LxDetailScreenState extends State<_LxDetailScreen> {
     final entry = widget.problems[_index];
     final total = widget.problems.length;
 
-    return Scaffold(
+    return Theme(
+      data: LxTheme.debuggerTheme,
+      child: Scaffold(
       backgroundColor: LxTheme.bg,
       appBar: AppBar(
         backgroundColor: LxTheme.surface,
@@ -472,6 +479,7 @@ class _LxDetailScreenState extends State<_LxDetailScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 }

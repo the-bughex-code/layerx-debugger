@@ -48,6 +48,11 @@ class LayerXConsoleCapture {
           level: LayerXLogLevel.debug,
           message: message,
           category: LayerXLogCategory.debugConsole,
+          // Raw console echoes carry no useful source location (the stack would
+          // just be the debugPrint→capture plumbing), and this is the highest-
+          // volume ingest path. Skipping the StackTrace.current capture here is
+          // what keeps a flood of console lines from blocking the UI thread.
+          resolveLocation: false,
         ));
   }
 
