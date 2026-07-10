@@ -17,8 +17,10 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   thread long enough to trigger an Android **ANR** (SIGQUIT / "Wrote stack traces
   to tombstoned"). Ingest now captures a stack **at most once**, and only for
   entries worth attributing (an explicit error/stack, or `warning`+); the
-  high-volume console-capture path skips it entirely. Data-heavy screens no
-  longer hang.
+  high-volume console-capture path skips it entirely. As a hard guard, console
+  capture also caps how many lines it ingests per synchronous burst (collapsing
+  any overflow into a single summary entry), so it can never block the UI thread
+  however chatty the app is. Data-heavy screens no longer hang.
 - **Log attribution (screen / method) now populates from the stack.** The
   stack-frame parser's SDK-frame filter matched `dart:` as a bare substring,
   which also matched every real app frame — a normal frame path ends in

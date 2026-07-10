@@ -11,6 +11,28 @@ import 'package:layerx_debugger/src/services/logger/layerx_console_capture.dart'
 /// entirely, so a flood is bounded and cheap.
 void main() {
   setUp(LayerXLogStore.clear);
+  tearDown(LayerXConsoleCapture.reset);
+
+  test('a burst past the per-burst cap is bounded and summarised, never '
+      'silently dropped (the hard UI-thread guard)', () async {
+    // Blast well past the cap in one synchronous burst — the shape of a logger
+    // dumping a huge payload while a screen builds.
+    const burst = 1500;
+    for (var i = 0; i < burst; i++) {
+      LayerXConsoleCapture.capture('burst line $i');
+    }
+    // Let the microtask that resets the burst budget (and emits the summary) run.
+    await Future<void>.delayed(Duration.zero);
+
+    final logs = LayerXLogStore.logs;
+    // The overflow is accounted for with a single summary entry, not dropped
+    // without a trace.
+    expect(
+      logs.where((l) => l.message.contains('suppressed by LayerX')),
+      isNotEmpty,
+      reason: 'lines beyond the cap must be summarised',
+    );
+  });
 
   test('a 3000-line console flood is captured cheaply, with NO per-line '
       'StackTrace.current (the ANR path is gone)', () {
