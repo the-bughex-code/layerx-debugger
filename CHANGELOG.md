@@ -5,7 +5,7 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 1.9.1
+## 1.9.2
 
 ### Fixed
 
@@ -21,6 +21,19 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   capture also caps how many lines it ingests per synchronous burst (collapsing
   any overflow into a single summary entry), so it can never block the UI thread
   however chatty the app is. Data-heavy screens no longer hang.
+
+### Changed
+
+- The in-app debugger (shell, detail screen and the floating trigger overlay) is
+  now wrapped in its **own self-contained dark Material theme**, so it renders
+  consistently on any host — including Cupertino/`WidgetsApp` apps with no
+  Material ancestor (fixes a "No Material widget found" crash class for the FAB's
+  bottom sheet / popup menu) — and never inherits the host app's theme.
+
+## 1.9.1
+
+### Fixed
+
 - **Log attribution (screen / method) now populates from the stack.** The
   stack-frame parser's SDK-frame filter matched `dart:` as a bare substring,
   which also matched every real app frame — a normal frame path ends in
@@ -30,14 +43,6 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   location parens (`(dart:`, `(package:flutter/`, `(package:logger/`), so true
   SDK/framework frames are skipped while the first real app frame is attributed
   correctly.
-
-### Changed
-
-- The in-app debugger (shell, detail screen and the floating trigger overlay) is
-  now wrapped in its **own self-contained dark Material theme**, so it renders
-  consistently on any host — including Cupertino/`WidgetsApp` apps with no
-  Material ancestor (fixes a "No Material widget found" crash class for the FAB's
-  bottom sheet / popup menu) — and never inherits the host app's theme.
 
 ## 1.9.0
 
