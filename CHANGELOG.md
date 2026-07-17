@@ -5,6 +5,62 @@ All notable changes to **layerx_debugger** are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.9.3
+
+### Fixed
+
+- **Random freeze/crash during navigation (critical).** The log store notified
+  its listeners (the floating "Report a bug" pill, the settings tile, the open
+  shell) **synchronously**. Any log emitted while a frame was building — a GetX
+  controller's `onInit` running while its route builds (`Get.put`/bindings/
+  `Get.find` during build), `LayerXLog.screen()` called from `build()`, a nested
+  `Navigator`'s initial `didPush` firing inside `initState`, or any
+  `FlutterError` reported during a build — ran `setState` on those listeners
+  mid-build: *"setState() or markNeedsBuild() called during build."* Worse, the
+  framework forwards that failure to `FlutterError.onError`, which is LayerX's
+  own crash hook — it re-ingested the error into the same notifier, which threw
+  again, recursing without bound: console flooded with error dumps, `debugPrint`
+  throttling backed up for minutes, and the stack eventually overflowed. The
+  app froze or died mid-navigation with no useful logs. The store now keeps a
+  synchronous canonical list but **defers listener notification to a post-frame
+  callback whenever a frame is mid-build**, coalescing bursts into one
+  notification per frame — every producer phase is now safe, and log floods no
+  longer rebuild the FAB once per entry.
+- **Crash-handler feedback loops.** `LayerXCrashHandler` now drops errors
+  raised *while it is recording an error* (re-entrancy guard), and a throwing
+  `onCrash` callback can no longer cascade back into the error hooks.
+- **Unbounded duplicate growth.** A repeating error (broken timer/stream)
+  accumulated `repeatTimestamps` forever; entries now keep the newest 100
+  timestamps while `occurrenceCount` still tracks the true total.
+- **Overlay churn on navigation.** The trigger overlay was removed and
+  re-inserted after *every* push, pop and replace. Pops can never cover the
+  trigger, so they no longer touch the overlay, and queued lifts are
+  single-flight — one navigation burst schedules at most one re-insert.
+- **Stale navigator use.** `LayerXDebugger.findNavigator` no longer returns the
+  route observer's navigator when that navigator is unmounted (e.g. the
+  observer was attached to a since-disposed nested navigator), so opening the
+  viewer can't push onto a dead navigator.
+- **Stacked viewer shells (critical).** The edge-swipe trigger opened the
+  viewer on *every* drag update past its 8px threshold — one fast swipe pushed
+  several debugger shells, and the back button then appeared broken (each press
+  peeled one invisible duplicate). The swipe is now latched once per gesture,
+  and every open path (FAB tap, coach bubble, quick menu, edge swipe,
+  `LayerXDebugger.openViewer`, the settings tile) claims a single-flight open —
+  a double-tap or a tap racing an API callback opens exactly one shell.
+- **Per-log list copies in hot paths.** The store's `logs` getter returns a
+  defensive copy; the duplicate lookup (which runs on **every** ingest) and the
+  badge counts (which run on every FAB rebuild) went through it, turning a
+  console flood into O(n²) allocation churn on the UI thread. They now iterate
+  the canonical list in place, and the dedup scan stops at the 2-second window
+  boundary instead of walking all 500 entries.
+- **Frame-monitor callback leak.** `LayerXFrameMonitor.reset()` now detaches
+  its timings callback; a reset + re-install cycle no longer double-logs every
+  janky frame.
+- **Non-Material hosts.** Copy confirmations and the clear-session Undo
+  snackbar use `ScaffoldMessenger.maybeOf`, so a Cupertino/WidgetsApp host
+  (which has no ScaffoldMessenger) can no longer make a copy or clear action
+  throw.
+
 ## 1.9.2
 
 ### Fixed
