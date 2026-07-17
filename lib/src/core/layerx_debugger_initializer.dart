@@ -12,6 +12,7 @@ import 'package:layerx_debugger/src/services/route/layerx_route_observer.dart';
 import 'package:layerx_debugger/src/repository/layerx_log_store.dart';
 import 'package:layerx_debugger/src/core/bindings/layerx_bindings.dart';
 import 'package:layerx_debugger/src/core/layerx_architecture_detector.dart';
+import 'package:layerx_debugger/src/core/layerx_viewer_state.dart';
 import 'package:layerx_debugger/src/config/layerx_debug_config.dart';
 import 'package:layerx_debugger/src/widgets/lx_overlay_installer.dart';
 
@@ -138,32 +139,34 @@ class LayerXDebugger {
   /// );
   /// ```
   static Future<void> openViewer(BuildContext context) async {
-    final nav = findNavigator(context);
-    if (nav != null) {
+    // Single-flight across every open path: a second call while the viewer is
+    // open (or opening) is a no-op, so rapid taps and repeated edge-swipe drag
+    // updates can never stack multiple shells.
+    if (!LayerXViewerState.beginOpen()) return;
+    try {
+      final nav = findNavigator(context) ??
+          Navigator.of(context, rootNavigator: true);
       await nav.push(
         MaterialPageRoute<void>(builder: (_) => const LxDebuggerShell()),
       );
-    } else {
-      try {
-        await Navigator.of(context, rootNavigator: true).push(
-          MaterialPageRoute<void>(builder: (_) => const LxDebuggerShell()),
-        );
-      } catch (e, stack) {
-        LayerXLog.log(
-          level: LayerXLogLevel.error,
-          message: '[LayerX Debugger] Failed to open viewer: Navigator not found.',
-          error: e,
-          stackTrace: stack,
-        );
-      }
+    } catch (e, stack) {
+      LayerXViewerState.cancelOpen();
+      LayerXLog.log(
+        level: LayerXLogLevel.error,
+        message: '[LayerX Debugger] Failed to open viewer: Navigator not found.',
+        error: e,
+        stackTrace: stack,
+      );
     }
   }
 
   /// Robustly searches for a [NavigatorState] in the widget tree.
   static NavigatorState? findNavigator(BuildContext context) {
-    // 1. Try using the routeObserver navigator first
+    // 1. Try using the routeObserver navigator first. Guarded on `mounted`:
+    // if the observer was (incorrectly) attached to a nested navigator that
+    // has since been disposed, pushing on it would crash.
     final observerNav = _routeObserver?.navigator;
-    if (observerNav != null) return observerNav;
+    if (observerNav != null && observerNav.mounted) return observerNav;
 
     // 2. Try standard context search
     try {
@@ -204,5 +207,6 @@ class LayerXDebugger {
     LayerXFrameMonitor.reset();
     LayerXConsoleCapture.reset();
     LayerXOverlayInstaller.reset();
+    LayerXViewerState.reset();
   }
 }

@@ -6,12 +6,32 @@ import 'package:layerx_debugger/src/config/layerx_debug_config.dart';
 import 'package:layerx_debugger/src/config/lx_theme.dart';
 import 'package:layerx_debugger/src/core/layerx_debugger_initializer.dart';
 
-class LxEdgeTrigger extends StatelessWidget {
+class LxEdgeTrigger extends StatefulWidget {
   const LxEdgeTrigger({super.key});
+
+  @override
+  State<LxEdgeTrigger> createState() => _LxEdgeTriggerState();
+}
+
+class _LxEdgeTriggerState extends State<LxEdgeTrigger> {
+  /// One swipe must open the viewer at most once. A fast swipe delivers many
+  /// drag updates past the 8px threshold, and an unlatched handler used to
+  /// push a debugger shell for every one of them — stacked shells that made
+  /// the back button appear broken. Latched on first trigger, re-armed when
+  /// the gesture ends.
+  bool _dragConsumed = false;
 
   void _open(BuildContext context) {
     LayerXDebugger.openViewer(context);
   }
+
+  void _openOnce(BuildContext context) {
+    if (_dragConsumed) return;
+    _dragConsumed = true;
+    _open(context);
+  }
+
+  void _rearm() => _dragConsumed = false;
 
   @override
   Widget build(BuildContext context) {
@@ -39,17 +59,21 @@ class LxEdgeTrigger extends StatelessWidget {
           onHorizontalDragUpdate: (isLeft || isRight)
               ? (details) {
                   if (isRight && details.primaryDelta! < -8) {
-                    _open(context);
+                    _openOnce(context);
                   } else if (isLeft && details.primaryDelta! > 8) {
-                    _open(context);
+                    _openOnce(context);
                   }
                 }
               : null,
+          onHorizontalDragEnd: (isLeft || isRight) ? (_) => _rearm() : null,
+          onHorizontalDragCancel: (isLeft || isRight) ? _rearm : null,
           onVerticalDragUpdate: isBottom
               ? (details) {
-                  if (details.primaryDelta! < -8) _open(context);
+                  if (details.primaryDelta! < -8) _openOnce(context);
                 }
               : null,
+          onVerticalDragEnd: isBottom ? (_) => _rearm() : null,
+          onVerticalDragCancel: isBottom ? _rearm : null,
           child: Container(
             width: width,
             height: height,

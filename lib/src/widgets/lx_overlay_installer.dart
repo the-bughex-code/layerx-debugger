@@ -23,6 +23,7 @@ abstract final class LayerXOverlayInstaller {
   static OverlayEntry? _entry;
   static OverlayState? _overlay;
   static bool _scheduled = false;
+  static bool _liftScheduled = false;
 
   /// Whether the trigger overlay is currently inserted.
   static bool get isInstalled => _entry != null;
@@ -61,8 +62,12 @@ abstract final class LayerXOverlayInstaller {
   }
 
   /// Re-inserts the entry so it stays on top of routes pushed after it.
+  /// Single-flight: a burst of navigation events queues at most one lift.
   static void bringToFront() {
+    if (_liftScheduled) return;
+    _liftScheduled = true;
     _deferred(() {
+      _liftScheduled = false;
       final e = _entry;
       final o = _overlay;
       if (e == null || o == null || !o.mounted) return;
@@ -87,6 +92,7 @@ abstract final class LayerXOverlayInstaller {
     _entry = null;
     _overlay = null;
     _scheduled = false;
+    _liftScheduled = false;
   }
 
   /// Runs [action] after the current frame, guarded so the debugger can never

@@ -16,18 +16,30 @@ class LayerXDuplicateGuard {
     return '${levelName}_${message}_${screenName ?? ''}_${methodName ?? ''}';
   }
 
+  /// The most repeat timestamps kept per entry. An error firing in a tight
+  /// loop (a broken timer/stream) would otherwise grow its entry without
+  /// bound; the occurrence count keeps the true total.
+  static const int maxRepeatTimestamps = 100;
+
+  /// Registers one more occurrence of [duplicate]: bumps the count and appends
+  /// [timestamp], keeping only the newest [maxRepeatTimestamps] timestamps.
+  static void registerRepeat(LayerXLogEntry duplicate, DateTime timestamp) {
+    duplicate.occurrenceCount++;
+    duplicate.repeatTimestamps.add(timestamp);
+    if (duplicate.repeatTimestamps.length > maxRepeatTimestamps) {
+      duplicate.repeatTimestamps.removeRange(
+        0,
+        duplicate.repeatTimestamps.length - maxRepeatTimestamps,
+      );
+    }
+  }
+
   /// Returns an existing entry matching [key] within two seconds of
   /// [newTimestamp], or `null` if none is found.
-  static LayerXLogEntry? findDuplicate(String key, DateTime newTimestamp) {
-    final logs = LayerXLogStore.logs;
-    for (final log in logs) {
-      if (log.dedupKey == key) {
-        final difference = newTimestamp.difference(log.timestamp).abs();
-        if (difference.inSeconds <= 2) {
-          return log;
-        }
-      }
-    }
-    return null;
-  }
+  ///
+  /// Delegates to the store's in-place scan: this runs on EVERY ingest, and
+  /// going through `LayerXLogStore.logs` would copy the whole list each time —
+  /// O(n²) allocation churn during a console flood.
+  static LayerXLogEntry? findDuplicate(String key, DateTime newTimestamp) =>
+      LayerXLogStore.findRecentByDedupKey(key, newTimestamp);
 }

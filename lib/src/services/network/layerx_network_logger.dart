@@ -167,8 +167,7 @@ class LayerXNetworkLogger {
       );
       final duplicate = LayerXDuplicateGuard.findDuplicate(dedupKey, now);
       if (duplicate != null) {
-        duplicate.occurrenceCount++;
-        duplicate.repeatTimestamps.add(now);
+        LayerXDuplicateGuard.registerRepeat(duplicate, now);
         LayerXLogStore.updateLog(duplicate);
         return;
       }

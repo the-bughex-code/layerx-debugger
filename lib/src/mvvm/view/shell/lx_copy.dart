@@ -14,20 +14,24 @@ abstract final class LxCopy {
 
   /// Copies [text] and shows exactly one confirmation snackbar. Rapid repeat
   /// copies replace the current snackbar instead of queueing behind it.
+  ///
+  /// `maybeOf`, not `of`: the FAB overlay works on Cupertino/WidgetsApp hosts
+  /// that have no ScaffoldMessenger — the copy must still happen there, just
+  /// without the confirmation.
   static Future<void> copy(BuildContext context, String text) async {
-    final messenger = ScaffoldMessenger.of(context);
+    final messenger = ScaffoldMessenger.maybeOf(context);
     await Clipboard.setData(ClipboardData(text: text));
     messenger
-      ..hideCurrentSnackBar()
+      ?..hideCurrentSnackBar()
       ..showSnackBar(LxTheme.snackBar(confirmation));
   }
 
   /// Copies the full session export, or explains there is nothing to copy.
   static Future<void> copyExport(BuildContext context) async {
-    final messenger = ScaffoldMessenger.of(context);
+    final messenger = ScaffoldMessenger.maybeOf(context);
     if (LayerXLogStore.logs.isEmpty) {
       messenger
-        ..hideCurrentSnackBar()
+        ?..hideCurrentSnackBar()
         ..showSnackBar(LxTheme.snackBar('Nothing captured yet'));
       return;
     }
@@ -35,7 +39,7 @@ abstract final class LxCopy {
     if (!context.mounted) return;
     await Clipboard.setData(ClipboardData(text: text));
     messenger
-      ..hideCurrentSnackBar()
+      ?..hideCurrentSnackBar()
       ..showSnackBar(LxTheme.snackBar(confirmation));
   }
 }

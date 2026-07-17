@@ -375,8 +375,10 @@ class _LxDebuggerShellState extends State<LxDebuggerShell> {
     final snapshot = List<LayerXLogEntry>.from(LayerXLogStore.logs);
     LayerXLogStore.clear();
     LayerXViewerState.selected.value = null;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
+    // maybeOf: on a Cupertino/WidgetsApp host there is no ScaffoldMessenger —
+    // the clear still happens, only the Undo snackbar is unavailable.
+    ScaffoldMessenger.maybeOf(context)
+      ?..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(
         content: const Text('Session cleared'),
         duration: const Duration(seconds: 6),

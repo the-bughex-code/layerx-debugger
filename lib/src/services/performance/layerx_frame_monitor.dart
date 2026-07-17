@@ -61,7 +61,18 @@ abstract final class LayerXFrameMonitor {
   }
 
   /// Resets installation state. Used by tests.
+  ///
+  /// Also detaches the timings callback — without this a reset+install cycle
+  /// (hot restart, re-initialize) would leave two callbacks registered and
+  /// double-log every janky frame.
   static void reset() {
+    if (_installed) {
+      try {
+        SchedulerBinding.instance.removeTimingsCallback(_onTimings);
+      } catch (_) {
+        // Binding gone (test teardown) — nothing to detach.
+      }
+    }
     _installed = false;
     _lastLoggedMicros = 0;
   }

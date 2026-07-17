@@ -20,6 +20,7 @@ class LayerXCrashHandler {
   LayerXCrashHandler._();
 
   static bool _installed = false;
+  static bool _recording = false;
   static FlutterExceptionHandler? _previousFlutterOnError;
   static void Function()? _isolateClose;
 
@@ -47,11 +48,7 @@ class LayerXCrashHandler {
             description: details.exceptionAsString(),
           ),
         );
-        config.onCrash?.call(
-          details.exception,
-          details.stack ?? StackTrace.current,
-          false,
-        );
+        _forward(details.exception, details.stack ?? StackTrace.current, false);
       }
       final previous = _previousFlutterOnError;
       if (previous != null) {
@@ -67,7 +64,7 @@ class LayerXCrashHandler {
         _record(error.toString(), error, stack,
             fatal: true,
             category: LayerXErrorClassifier.classifyUncaught(fatal: true));
-        config.onCrash?.call(error, stack, true);
+        _forward(error, stack, true);
       }
       return false;
     };
@@ -78,7 +75,7 @@ class LayerXCrashHandler {
         _record(error.toString(), error, stack,
             fatal: true,
             category: LayerXErrorClassifier.classifyUncaught(fatal: true));
-        config.onCrash?.call(error, stack, true);
+        _forward(error, stack, true);
       }
     });
   }
@@ -94,7 +91,7 @@ class LayerXCrashHandler {
           _record(error.toString(), error, stack,
               fatal: true,
               category: LayerXErrorClassifier.classifyUncaught(fatal: true));
-          config.onCrash?.call(error, stack, true);
+          _forward(error, stack, true);
         }
       },
       zoneSpecification: ZoneSpecification(
@@ -122,17 +119,38 @@ class LayerXCrashHandler {
     String? library,
     LayerXLogCategory category = LayerXLogCategory.app,
   }) {
-    LayerXLogOutput.ingest(
-      level: fatal ? LayerXLogLevel.fatal : LayerXLogLevel.error,
-      message: fatal ? '💀 FATAL: $message' : message,
-      category: category,
-      error: error,
-      stackTrace: stack,
-      extras: {
-        if (library != null) 'library': library,
-        if (fatal) 'fatal': true,
-      },
-      packageName: LayerXDebugger.config.packageName,
-    );
+    // An error raised while recording an error (a listener throwing during the
+    // store notification, a broken toString(), …) must be dropped, not
+    // re-recorded — re-entering here is what turns one bad frame into an
+    // unbounded feedback loop that freezes the app.
+    if (_recording) return;
+    _recording = true;
+    try {
+      LayerXLogOutput.ingest(
+        level: fatal ? LayerXLogLevel.fatal : LayerXLogLevel.error,
+        message: fatal ? '💀 FATAL: $message' : message,
+        category: category,
+        error: error,
+        stackTrace: stack,
+        extras: {
+          if (library != null) 'library': library,
+          if (fatal) 'fatal': true,
+        },
+        packageName: LayerXDebugger.config.packageName,
+      );
+    } finally {
+      _recording = false;
+    }
+  }
+
+  /// Forwards a captured error to the app's [LayerXDebugConfig.onCrash]
+  /// callback, guarded so a throwing callback can never cascade into the
+  /// error hooks that invoked it.
+  static void _forward(Object error, StackTrace stack, bool fatal) {
+    try {
+      LayerXDebugger.config.onCrash?.call(error, stack, fatal);
+    } catch (_) {
+      // The debugger must never take the app down.
+    }
   }
 }

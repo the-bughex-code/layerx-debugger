@@ -9,6 +9,7 @@ import 'package:layerx_debugger/src/mvvm/view/shell/lx_copy.dart';
 import 'package:layerx_debugger/src/mvvm/view/shell/lx_debugger_shell.dart';
 import 'package:layerx_debugger/src/config/lx_theme.dart';
 import 'package:layerx_debugger/src/core/layerx_debugger_initializer.dart';
+import 'package:layerx_debugger/src/core/layerx_viewer_state.dart';
 
 class LxFabTrigger extends StatefulWidget {
   const LxFabTrigger({super.key});
@@ -156,10 +157,11 @@ class _LxFabTriggerState extends State<LxFabTrigger>
   }
 
   void _openLogs(BuildContext context) {
-    final nav = LayerXDebugger.findNavigator(context);
-    if (nav != null) {
-      nav.push(
-        PageRouteBuilder<void>(
+    // Single-flight: a double-tap (or tapping the pill and the coach bubble in
+    // quick succession) must open exactly one shell — stacked shells make the
+    // back button appear broken.
+    if (!LayerXViewerState.beginOpen()) return;
+    PageRouteBuilder<void> shellRoute() => PageRouteBuilder<void>(
           pageBuilder: (_, animation, __) => const LxDebuggerShell(),
           transitionsBuilder: (_, animation, __, child) {
             return SlideTransition(
@@ -172,27 +174,16 @@ class _LxFabTriggerState extends State<LxFabTrigger>
             );
           },
           transitionDuration: const Duration(milliseconds: 380),
-        ),
-      );
-    } else {
-      try {
-        Navigator.of(context, rootNavigator: true).push(
-          PageRouteBuilder<void>(
-            pageBuilder: (_, animation, __) => const LxDebuggerShell(),
-            transitionsBuilder: (_, animation, __, child) {
-              return SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 1),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                    parent: animation, curve: Curves.easeOutCubic)),
-                child: child,
-              );
-            },
-            transitionDuration: const Duration(milliseconds: 380),
-          ),
         );
-      } catch (_) {}
+    try {
+      final nav = LayerXDebugger.findNavigator(context);
+      if (nav != null) {
+        nav.push(shellRoute());
+      } else {
+        Navigator.of(context, rootNavigator: true).push(shellRoute());
+      }
+    } catch (_) {
+      LayerXViewerState.cancelOpen();
     }
   }
 

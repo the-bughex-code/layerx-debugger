@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'package:layerx_debugger/src/core/layerx_debugger_initializer.dart';
 import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
 import 'package:layerx_debugger/src/repository/layerx_log_store.dart';
-import 'package:layerx_debugger/src/mvvm/view/shell/lx_debugger_shell.dart';
 
 /// A ready-made list tile that opens the LayerX log viewer.
 ///
@@ -32,13 +32,8 @@ class LayerXDebugSettingsButton extends StatelessWidget {
           ),
           subtitle: Text('$problemCount problems'),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (context) => const LxDebuggerShell(),
-              ),
-            );
-          },
+          // The guarded open path: a rapid double-tap opens exactly one shell.
+          onTap: () => LayerXDebugger.openViewer(context),
         );
       },
     );

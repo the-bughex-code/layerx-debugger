@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
 import 'package:layerx_debugger/src/mvvm/model/layerx_log_entry.dart';
@@ -22,15 +23,83 @@ class LayerXLogStore {
   static final ValueNotifier<List<LayerXLogEntry>> logsNotifier =
       ValueNotifier<List<LayerXLogEntry>>([]);
 
-  /// The current entries, newest first.
-  static List<LayerXLogEntry> get logs => logsNotifier.value;
+  /// The canonical entry list. [logsNotifier] mirrors it, one frame behind at
+  /// most — see [_notify].
+  static final List<LayerXLogEntry> _logs = <LayerXLogEntry>[];
+
+  static bool _notifyScheduled = false;
+
+  /// The current entries, newest first. Always up to date, including entries
+  /// whose listener notification is still pending.
+  static List<LayerXLogEntry> get logs => List.unmodifiable(_logs);
+
+  /// Publishes [_logs] to [logsNotifier] — never synchronously while a frame
+  /// is building.
+  ///
+  /// Logs are emitted from anywhere, including the middle of the build phase
+  /// (a controller's `onInit` while its route builds, `LayerXLog.screen()` in
+  /// `build()`, a nested Navigator's initial `didPush`, a FlutterError reported
+  /// during build). Notifying synchronously there runs `setState` on the
+  /// always-mounted FAB listener mid-build — a framework error which the crash
+  /// handler then re-ingests into this same notifier, recursing until the UI
+  /// thread locks up. Deferring to a post-frame callback makes every producer
+  /// phase-safe and coalesces bursts into a single notification per frame.
+  static void _notify() {
+    try {
+      final binding = SchedulerBinding.instance;
+      if (binding.schedulerPhase == SchedulerPhase.persistentCallbacks) {
+        if (_notifyScheduled) return;
+        _notifyScheduled = true;
+        binding.addPostFrameCallback((_) {
+          _notifyScheduled = false;
+          logsNotifier.value = List.unmodifiable(_logs);
+        });
+        return;
+      }
+    } catch (_) {
+      // No binding (pure Dart test) — publish synchronously below.
+    }
+    logsNotifier.value = List.unmodifiable(_logs);
+  }
 
   /// The number of `error` + `fatal` entries — used for the FAB badge.
-  static int get errorCount => logs
+  ///
+  /// Counts iterate [_logs] directly (NOT the [logs] getter, which copies the
+  /// whole list) — they run on every badge rebuild.
+  static int get errorCount => _logs
       .where((log) =>
           log.level == LayerXLogLevel.error ||
           log.level == LayerXLogLevel.fatal)
       .length;
+
+  /// The most recent entries scanned when collapsing duplicates. Bounds the
+  /// per-ingest cost during floods; anything beyond this many arrivals inside
+  /// the dedup window simply starts a fresh entry.
+  static const int _dedupScanLimit = 200;
+
+  /// Returns a recent entry with [dedupKey] whose timestamp is within [window]
+  /// of [now], or `null`.
+  ///
+  /// This is the per-ingest duplicate lookup, so it must not allocate: it
+  /// walks [_logs] in place (never the copying [logs] getter). Entries are
+  /// newest-first by ingest time, so the walk stops at the first entry older
+  /// than the window — a flood can't turn every ingest into a full scan.
+  static LayerXLogEntry? findRecentByDedupKey(
+    String dedupKey,
+    DateTime now, {
+    Duration window = const Duration(seconds: 2),
+  }) {
+    var scanned = 0;
+    for (final log in _logs) {
+      if (now.difference(log.timestamp) > window) break;
+      if (++scanned > _dedupScanLimit) break;
+      if (log.dedupKey == dedupKey &&
+          now.difference(log.timestamp).abs() <= window) {
+        return log;
+      }
+    }
+    return null;
+  }
 
   /// The minimum duration (ms) at which an otherwise-healthy entry is still
   /// counted as a problem — a slow request, even at success level. Configure
@@ -56,11 +125,11 @@ class LayerXLogStore {
 
   /// The single source of truth for "how many problems are open" — used by the
   /// FAB badge, the header count, and the settings tile.
-  static int get openProblemCount => logs.where(isProblemEntry).length;
+  static int get openProblemCount => _logs.where(isProblemEntry).length;
 
   /// The number of entries whose API response schema changed.
   static int get schemaChangeCount =>
-      logs.where((log) => log.responseChanged).length;
+      _logs.where((log) => log.responseChanged).length;
 
   static final Map<String, String> _lastResponsesByEndpoint = {};
 
@@ -87,54 +156,56 @@ class LayerXLogStore {
       _lastResponsesByEndpoint[endpointKey] = log.responsePayload!;
     }
 
-    final currentList = List<LayerXLogEntry>.from(logsNotifier.value);
-    currentList.insert(0, logToInsert);
-    if (currentList.length > maxStoredLogs) {
-      currentList.removeRange(maxStoredLogs, currentList.length);
+    _logs.insert(0, logToInsert);
+    if (_logs.length > maxStoredLogs) {
+      _logs.removeRange(maxStoredLogs, _logs.length);
     }
-    logsNotifier.value = currentList;
+    _notify();
   }
 
   /// Replaces the entry with the same id as [updatedLog].
   static void updateLog(LayerXLogEntry updatedLog) {
-    final currentList = List<LayerXLogEntry>.from(logsNotifier.value);
-    final index = currentList.indexWhere((log) => log.id == updatedLog.id);
+    final index = _logs.indexWhere((log) => log.id == updatedLog.id);
     if (index != -1) {
-      currentList[index] = updatedLog;
-      logsNotifier.value = currentList;
+      _logs[index] = updatedLog;
+      _notify();
     }
   }
 
   /// Removes the entry with the given [id].
   static void deleteLog(String id) {
-    final currentList = List<LayerXLogEntry>.from(logsNotifier.value);
-    currentList.removeWhere((log) => log.id == id);
-    logsNotifier.value = currentList;
+    _logs.removeWhere((log) => log.id == id);
+    _notify();
   }
 
   /// Clears all entries and the per-endpoint response history.
   static void clear() {
-    logsNotifier.value = [];
+    _logs.clear();
     _lastResponsesByEndpoint.clear();
+    _notify();
   }
 
   /// Restores a previously captured snapshot (used by the clear-session Undo).
   static void restore(List<LayerXLogEntry> entries) {
-    logsNotifier.value = List<LayerXLogEntry>.from(entries);
+    _logs
+      ..clear()
+      ..addAll(entries);
+    _notify();
   }
 
   /// Renders all entries to a shareable plain-text report.
   static Future<String> exportLogsAsString() async {
+    final entries = List<LayerXLogEntry>.from(_logs);
     final buffer = StringBuffer();
     buffer.writeln('=== LAYERX LOG EXPORT ===');
     buffer.writeln('Exported on: ${DateTime.now().toIso8601String()}');
-    buffer.writeln('Total Logs  : ${logs.length}');
+    buffer.writeln('Total Logs  : ${entries.length}');
     buffer.writeln(
-        'Errors/Fatal: ${logs.where((l) => l.level == LayerXLogLevel.error || l.level == LayerXLogLevel.fatal).length}');
+        'Errors/Fatal: ${entries.where((l) => l.level == LayerXLogLevel.error || l.level == LayerXLogLevel.fatal).length}');
     buffer.writeln('Schema Diffs: $schemaChangeCount');
     buffer.writeln('─' * 60);
 
-    for (final log in logs) {
+    for (final log in entries) {
       buffer.writeln(
           '[${log.timestamp.toIso8601String()}] [${log.level.label}] [${log.source.label}]');
       if (log.screenName != null || log.methodName != null) {

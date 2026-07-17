@@ -83,9 +83,14 @@ class LayerXRouteObserver extends NavigatorObserver {
   /// Ensures the debug triggers are mounted in this navigator's overlay and
   /// kept above the current route. This is what makes the FAB appear on apps
   /// that never wired `LayerXDebugOverlay` into `MaterialApp.builder`.
-  void _ensureTriggers() {
+  ///
+  /// [lift] re-raises an already-installed entry above newly added overlay
+  /// content. Only pushes/replacements can cover the entry; pops cannot, so
+  /// they pass `lift: false` and skip the remove+reinsert churn.
+  void _ensureTriggers({bool lift = true}) {
     // Never let overlay wiring interfere with route logging or the host app.
     try {
+      if (!lift && LayerXOverlayInstaller.isInstalled) return;
       final overlay = navigator?.overlay;
       if (overlay != null && overlay.mounted) {
         LayerXOverlayInstaller.installInto(overlay);
@@ -108,7 +113,7 @@ class LayerXRouteObserver extends NavigatorObserver {
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPop(route, previousRoute);
     _logRoute(route, previousRoute, 'POP');
-    _ensureTriggers();
+    _ensureTriggers(lift: false);
   }
 
   @override
